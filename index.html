@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Curbside</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --green:#22c55e; --yellow:#f59e0b; --red:#ef4444; --blue:#3b82f6;
+  --ink:#0f172a; --sub:#64748b; --border:#e2e8f0;
+  --bg:#f0f5f8; --card:#fff;
+  --nav:64px;
+}
+html,body{height:100%;overflow:hidden;background:#111;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  max-width:390px;margin:0 auto;
+  height:100dvh;position:relative;
+  background:var(--bg);
+  box-shadow:0 0 60px rgba(0,0,0,.4);
+  overflow:hidden;
+}
+
+/* ═══ SCREENS ═══ */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;}
+.screen.on{display:flex;}
+
+/* ═══ MAP SCREEN ═══ */
+#map-screen{background:var(--bg);}
+#map{position:absolute;inset:0;z-index:0;}
+
+/* map tile tint — light teal, matches mockup */
+.leaflet-tile{
+  filter:
+    hue-rotate(168deg)
+    saturate(0.38)
+    brightness(1.06)
+    contrast(0.92);
+}
+/* water polygons already teal from hue-rotate; keep roads crisp */
+.leaflet-container{background:#d9eaf0;}
+
+/* ── top search bar ── */
+.map-topbar{
+  position:absolute;top:0;left:0;right:0;z-index:300;
+  padding:52px 14px 0;
+  pointer-events:none;
+}
+.search-pill{
+  background:#fff;border-radius:20px;
+  padding:12px 16px;display:flex;align-items:center;gap:10px;
+  box-shadow:0 2px 16px rgba(0,0,0,.12);pointer-events:all;
+}
+.search-pill svg{width:18px;height:18px;stroke:var(--sub);fill:none;flex-shrink:0;}
+.search-zone{flex:1;}
+.search-zone .sz-label{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;}
+.search-zone .sz-name{font-size:16px;font-weight:700;color:var(--ink);line-height:1;}
+.map-actions{display:flex;gap:8px;flex-shrink:0;}
+.map-act-btn{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  border:none;cursor:pointer;
+}
+.map-act-btn.map-toggle{background:var(--blue);}
+.map-act-btn.map-toggle svg{width:18px;height:18px;fill:#fff;}
+.map-act-btn.map-menu{background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.1);}
+.map-act-btn.map-menu svg{width:16px;height:16px;stroke:var(--ink);fill:none;stroke-width:2;}
+
+/* ── onboarding tooltip ── */
+.tip{
+  position:absolute;top:130px;left:14px;right:14px;z-index:300;
+  background:var(--ink);color:#fff;
+  border-radius:16px;padding:14px 16px;
+  font-size:14px;line-height:1.5;
+  box-shadow:0 4px 20px rgba(0,0,0,.25);
+  display:flex;align-items:flex-start;gap:10px;
+  transition:opacity .4s;pointer-events:all;
+}
+.tip.gone{opacity:0;pointer-events:none;}
+.tip-x{
+  background:none;border:none;cursor:pointer;
+  color:#94a3b8;font-size:18px;line-height:1;flex-shrink:0;margin-top:-2px;
+}
+
+/* ── nav-arrow pin ── */
+.nav-pin{
+  width:44px;height:52px;
+  display:flex;flex-direction:column;align-items:center;
+  cursor:pointer;
+}
+.nav-pin-circle{
+  width:44px;height:44px;border-radius:50%;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 12px rgba(0,0,0,.22);
+  border:2.5px solid #fff;
+  position:relative;
+}
+.nav-pin-circle::after{
+  content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-bottom:none;
+}
+.nav-pin.green  .nav-pin-circle{border-color:var(--green);}
+.nav-pin.green  .nav-pin-circle::after{border-top-color:var(--green);}
+.nav-pin.yellow .nav-pin-circle{border-color:var(--yellow);}
+.nav-pin.yellow .nav-pin-circle::after{border-top-color:var(--yellow);}
+.nav-pin.grey   .nav-pin-circle{border-color:#94a3b8;}
+.nav-pin.grey   .nav-pin-circle::after{border-top-color:#94a3b8;}
+.nav-pin.tow    .nav-pin-circle{border-color:var(--red);background:#fef2f2;}
+.nav-pin.tow    .nav-pin-circle::after{border-top-color:var(--red);}
+
+/* nav arrow SVG inside each pin */
+.nav-arrow-svg{width:20px;height:20px;}
+.nav-pin.green  .nav-arrow-svg{stroke:var(--green);}
+.nav-pin.yellow .nav-arrow-svg{stroke:var(--yellow);}
+.nav-pin.grey   .nav-arrow-svg{stroke:#94a3b8;}
+.nav-pin.tow    .nav-arrow-svg{display:none;}
+.tow-emoji{font-size:20px;line-height:1;}
+
+/* ── pin legend ── */
+.pin-legend{
+  position:absolute;z-index:300;
+  background:#fff;border-radius:20px;
+  padding:8px 14px;display:flex;gap:14px;align-items:center;
+  box-shadow:0 2px 12px rgba(0,0,0,.1);
+  font-size:12px;font-weight:600;color:var(--ink);
+  bottom: calc(var(--nav) + 16px);
+  left:14px;
+}
+.leg-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px;}
+
+/* ── bottom nav ── */
+.bnav{
+  position:absolute;bottom:0;left:0;right:0;z-index:400;
+  background:#fff;
+  height:var(--nav);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.bnav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;height:100%;border:none;background:none;cursor:pointer;
+}
+.bnav-btn svg{width:22px;height:22px;stroke:var(--sub);fill:none;stroke-width:1.8;transition:stroke .2s;}
+.bnav-btn span{font-size:11px;font-weight:600;color:var(--sub);transition:color .2s;}
+.bnav-btn.active svg{stroke:var(--blue);}
+.bnav-btn.active span{color:var(--blue);}
+.bnav-fab{
+  width:56px;height:56px;background:var(--blue);border-radius:50%;
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(59,130,246,.45);
+  flex-shrink:0;margin:0 8px;
+  transition:transform .15s;
+}
+.bnav-fab:active{transform:scale(.92);}
+.bnav-fab svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;}
+
+/* ═══ TOW RADAR SCREEN ═══ */
+#tow-screen{background:var(--bg);padding-bottom:var(--nav);}
+
+.tow-topbar{
+  flex-shrink:0;padding:52px 16px 16px;
+  background:var(--bg);
+}
+.tow-zone-label{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px;}
+.tow-zone-name{font-size:22px;font-weight:800;color:var(--ink);}
+
+.tow-scroll{flex:1;overflow-y:auto;padding:0 14px 20px;display:flex;flex-direction:column;gap:12px;}
+
+/* onboarding banner */
+.tow-tip{
+  background:var(--ink);border-radius:16px;padding:14px 16px;
+  display:flex;gap:10px;align-items:flex-start;
+  font-size:14px;color:#fff;line-height:1.5;
+  transition:opacity .4s;
+}
+.tow-tip.gone{display:none;}
+.tow-tip-x{background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0;margin-top:-2px;}
+
+/* BIG status card */
+.status-card{border-radius:20px;padding:22px 20px;}
+.status-card.amber{background:#fef3c7;}
+.status-card.green{background:#dcfce7;}
+.status-card.red  {background:#fee2e2;}
+.sc-top{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.sc-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  border-radius:20px;padding:5px 11px;
+  font-size:12px;font-weight:700;
+}
+.status-card.amber .sc-badge{background:#fde68a;color:#78350f;}
+.status-card.green .sc-badge{background:#bbf7d0;color:#14532d;}
+.status-card.red   .sc-badge{background:#fca5a5;color:#7f1d1d;}
+.sc-sub-label{font-size:13px;color:var(--sub);font-weight:500;}
+.sc-headline{
+  font-size:38px;font-weight:900;line-height:1.05;margin-bottom:16px;
+  letter-spacing:-.02em;
+}
+.status-card.amber .sc-headline{color:#78350f;}
+.status-card.green .sc-headline{color:#14532d;}
+.status-card.red   .sc-headline{color:#7f1d1d;}
+.sc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sc-stat{background:rgba(255,255,255,.7);border-radius:12px;padding:10px 12px;}
+.sc-stat-label{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;}
+.sc-stat-val{font-size:18px;font-weight:800;color:var(--ink);}
+
+/* section header */
+.sec-head{display:flex;justify-content:space-between;align-items:center;padding:4px 0;}
+.sec-head h3{font-size:16px;font-weight:800;color:var(--ink);}
+.sec-head span{font-size:13px;color:var(--sub);}
+
+/* report card */
+.rcard{background:#fff;border-radius:18px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.rcard-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;}
+.rcard-icon{
+  width:48px;height:48px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  background:#fee2e2;flex-shrink:0;
+}
+.rcard-icon.grey{background:#f1f5f9;}
+.rcard-body{flex:1;}
+.rcard-title{font-size:16px;font-weight:700;color:var(--ink);}
+.rcard-addr {font-size:13px;color:var(--sub);margin-top:2px;}
+.rcard-meta {display:flex;align-items:center;gap:6px;margin-top:8px;}
+.rcard-reporter{font-size:13px;font-weight:600;color:var(--ink);}
+.karma-pill{
+  display:inline-flex;align-items:center;gap:3px;
+  background:#f1f5f9;border-radius:20px;padding:2px 8px;
+  font-size:12px;font-weight:700;color:var(--ink);
+}
+.karma-pill svg{width:11px;height:11px;fill:var(--yellow);}
+.rcard-confirms{font-size:13px;color:var(--sub);}
+.rcard-time{margin-left:auto;font-size:12px;color:var(--sub);display:flex;align-items:center;gap:3px;flex-shrink:0;}
+.rcard-time svg{width:13px;height:13px;stroke:var(--sub);fill:none;stroke-width:1.8;}
+.vote-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.vote-btn{
+  height:44px;border-radius:12px;border:1.5px solid var(--border);
+  background:var(--bg);font-size:14px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:all .15s;
+  color:var(--ink);
+}
+.vote-btn.confirm{color:var(--green);}
+.vote-btn.confirm.voted{background:#dcfce7;border-color:#86efac;}
+.vote-btn.wrong.voted  {background:#fee2e2;border-color:#fca5a5;}
+.vote-btn svg{width:15px;height:15px;stroke-width:2.5;stroke-linecap:round;}
+.vote-btn.confirm svg{stroke:var(--green);fill:none;}
+.vote-btn.wrong  svg{stroke:var(--red);fill:none;}
+
+/* safe spots */
+.safe-row{
+  background:#fff;border-radius:14px;padding:12px 14px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer;
+}
+.safe-dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.safe-info{flex:1;}
+.safe-info strong{font-size:14px;font-weight:700;color:var(--ink);display:block;}
+.safe-info small{font-size:12px;color:var(--sub);}
+.safe-dist{font-size:13px;font-weight:700;color:var(--sub);}
+
+/* ═══ REPORT SHEET ═══ */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  max-width:390px;margin:0 auto;
+}
+.overlay.on{opacity:1;pointer-events:all;}
+
+.sheet{
+  position:fixed;bottom:0;left:50%;transform:translate(-50%,100%);
+  width:100%;max-width:390px;
+  background:#fff;border-radius:24px 24px 0 0;z-index:600;
+  transition:transform .35s cubic-bezier(.32,.72,0,1);
+}
+.sheet.on{transform:translate(-50%,0);}
+.sheet-handle{width:36px;height:4px;background:#e2e8f0;border-radius:2px;margin:12px auto 0;}
+.sheet-head{
+  padding:16px 20px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.sheet-title{font-size:18px;font-weight:800;color:var(--ink);}
+.sheet-close{
+  width:34px;height:34px;border-radius:50%;background:var(--bg);
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.sheet-close svg{width:16px;height:16px;stroke:var(--sub);fill:none;stroke-width:2.5;stroke-linecap:round;}
+.sheet-body{padding:20px 20px 32px;display:flex;flex-direction:column;gap:18px;}
+
+/* report steps */
+.step-label{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.step-num{
+  width:26px;height:26px;border-radius:50%;background:var(--blue);
+  color:#fff;font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.step-text{font-size:16px;font-weight:700;color:var(--ink);}
+
+/* type grid */
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.type-btn{
+  background:var(--bg);border:2px solid var(--border);
+  border-radius:16px;padding:14px 12px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+  font-size:14px;font-weight:700;color:var(--ink);
+  transition:all .15s;
+}
+.type-btn:active{transform:scale(.97);}
+.type-btn.sel{border-color:var(--ink);background:#f8fafc;}
+.type-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.type-dot.g{background:var(--green);}
+.type-dot.y{background:var(--yellow);}
+.type-dot.r{background:var(--red);}
+.type-dot.b{background:var(--blue);}
+
+/* location pill */
+.loc-pill{
+  background:var(--bg);border-radius:14px;padding:13px 16px;
+  display:flex;align-items:center;gap:10px;
+}
+.loc-pill svg{width:16px;height:16px;stroke:var(--blue);fill:none;stroke-width:2;flex-shrink:0;}
+.loc-pill-text{flex:1;font-size:14px;color:var(--ink);font-weight:500;}
+.loc-pill-edit{font-size:13px;font-weight:700;color:var(--blue);border:none;background:none;cursor:pointer;}
+
+/* detail input */
+.detail-inp{
+  width:100%;border:none;background:var(--bg);border-radius:14px;
+  padding:13px 16px;font-size:14px;color:var(--ink);font-family:inherit;
+  outline:none;resize:none;
+}
+.detail-inp::placeholder{color:#94a3b8;}
+
+/* submit button */
+.submit-btn{
+  width:100%;height:54px;
+  background:#bfdbfe;border:none;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:16px;font-weight:700;color:#1e3a8a;cursor:pointer;
+  transition:background .2s;
+}
+.submit-btn:not(:disabled):hover{background:#93c5fd;}
+.submit-btn:disabled{opacity:.5;cursor:default;}
+.submit-btn svg{width:18px;height:18px;stroke:#1e3a8a;fill:none;stroke-width:2.5;stroke-linecap:round;}
+
+/* ═══ PARKING DETAIL SHEET ═══ */
+.psheet{
+  position:fixed;bottom:0;left:50%;transform:translate(-50%,100%);
+  width:100%;max-width:390px;
+  background:#fff;border-radius:24px 24px 0 0;z-index:600;
+  transition:transform .35s cubic-bezier(.32,.72,0,1);
+  padding-bottom:32px;
+}
+.psheet.on{transform:translate(-50%,0);}
+.ps-handle{width:36px;height:4px;background:#e2e8f0;border-radius:2px;margin:12px auto 0;}
+.ps-pad{padding:16px 20px;}
+.ps-name{font-size:20px;font-weight:800;color:var(--ink);}
+.ps-tags{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
+.ps-tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:8px;background:#f1f5f9;color:var(--sub);}
+.ps-tag.g{background:#dcfce7;color:#15803d;}
+.ps-tag.y{background:#fef9c3;color:#a16207;}
+.ps-divider{height:1px;background:var(--border);margin:14px 0;}
+.ps-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f8fafc;}
+.ps-row label{font-size:14px;color:var(--sub);}
+.ps-row span{font-size:14px;font-weight:600;color:var(--ink);}
+.ps-vbox{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-top:10px;}
+.ps-vbox-t strong{font-size:13px;color:#15803d;display:block;}
+.ps-vbox-t small{font-size:12px;color:var(--sub);}
+.ps-btn{
+  width:100%;background:var(--ink);color:#fff;border:none;
+  border-radius:16px;padding:16px;font-size:16px;font-weight:700;
+  cursor:pointer;margin-top:14px;transition:opacity .2s;
+}
+.ps-btn:active{opacity:.85;}
+
+/* ═══ UNDO TOAST ═══ */
+.undo-toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:var(--ink);border-radius:14px;padding:12px 18px;
+  display:flex;align-items:center;gap:14px;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:700;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  max-width:340px;width:calc(100% - 40px);
+}
+.undo-toast.on{opacity:1;pointer-events:all;}
+.undo-toast-text{color:#fff;font-size:13px;font-weight:500;flex:1;}
+.undo-toast-btn{color:#60a5fa;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ MAP SCREEN ════════════════════ -->
+<div class="screen on" id="map-screen">
+  <div id="map"></div>
+
+  <!-- top search bar -->
+  <div class="map-topbar">
+    <div class="search-pill">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div class="search-zone">
+        <div class="sz-label">Zone</div>
+        <div class="sz-name">Bandra West</div>
+      </div>
+      <div class="map-actions">
+        <button class="map-act-btn map-toggle">
+          <svg viewBox="0 0 24 24"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7z"/><line x1="9" y1="4" x2="9" y2="17"/><line x1="15" y1="7" x2="15" y2="20"/></svg>
+        </button>
+        <button class="map-act-btn map-menu">
+          <svg viewBox="0 0 24 24" stroke-width="2"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- onboarding tip -->
+  <div class="tip" id="mapTip" style="top:130px;">
+    <span>Pins are updated by drivers like you. Tap any pin to see what's happening.</span>
+    <button class="tip-x" onclick="dismissTip('mapTip')">×</button>
+  </div>
+
+  <!-- pin legend -->
+  <div class="pin-legend">
+    <span><span class="leg-dot" style="background:var(--green)"></span>Open</span>
+    <span><span class="leg-dot" style="background:var(--yellow)"></span>Limited</span>
+    <span><span class="leg-dot" style="background:#94a3b8"></span>Unknown</span>
+  </div>
+
+  <!-- bottom nav -->
+  <div class="bnav">
+    <button class="bnav-btn active" id="nb-park" onclick="switchTab('map')">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      <span>Parking</span>
+    </button>
+    <button class="bnav-fab" onclick="openReport()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="bnav-btn" id="nb-tow" onclick="switchTab('tow')">
+      <svg viewBox="0 0 24 24"><path d="M3 17h11v2H3zM13 11h4l3 4H3v-2l3-3 3-3 4 4z"/><circle cx="6.5" cy="19.5" r="1.5"/><circle cx="16.5" cy="19.5" r="1.5"/></svg>
+      <span>Tow Radar</span>
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════ TOW RADAR SCREEN ════════════════════ -->
+<div class="screen" id="tow-screen">
+  <div class="tow-topbar">
+    <div class="tow-zone-label">Zone</div>
+    <div class="tow-zone-name">Bandra West</div>
+  </div>
+
+  <div class="tow-scroll">
+    <!-- tip banner -->
+    <div class="tow-tip" id="towTip">
+      <span>Tow alerts are only as good as what drivers report. Spot something? Report it in 2 taps.</span>
+      <button class="tow-tip-x" onclick="dismissTip('towTip')">×</button>
+    </div>
+
+    <!-- BIG status card -->
+    <div class="status-card amber">
+      <div class="sc-top">
+        <div class="sc-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          AMBER
+        </div>
+        <span class="sc-sub-label">Stay alert</span>
+      </div>
+      <div class="sc-headline">Reports<br>coming in</div>
+      <div class="sc-stats">
+        <div class="sc-stat">
+          <div class="sc-stat-label">Last hour</div>
+          <div class="sc-stat-val">2 reports</div>
+        </div>
+        <div class="sc-stat">
+          <div class="sc-stat-label">Last seen</div>
+          <div class="sc-stat-val">14m ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- reports section -->
+    <div class="sec-head">
+      <h3>Last 3 hours</h3>
+      <span>4 reports</span>
+    </div>
+
+    <div class="rcard">
+      <div class="rcard-top">
+        <div class="rcard-icon">🚛</div>
+        <div class="rcard-body">
+          <div style="display:flex;justify-content:space-between;">
+            <div class="rcard-title">Tow truck</div>
+            <div class="rcard-time">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              14m
+            </div>
+          </div>
+          <div class="rcard-addr">Waterfield Rd, near Starbucks</div>
+          <div class="rcard-meta">
+            <span class="rcard-reporter">Rhea P.</span>
+            <span class="karma-pill">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              145
+            </span>
+            <span class="rcard-confirms">· 4 confirmed</span>
+          </div>
+        </div>
+      </div>
+      <div class="vote-row">
+        <button class="vote-btn confirm" onclick="castVote(this,'confirm')">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Confirm
+        </button>
+        <button class="vote-btn wrong" onclick="castVote(this,'wrong')">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Wrong
+        </button>
+      </div>
+    </div>
+
+    <div class="rcard">
+      <div class="rcard-top">
+        <div class="rcard-icon grey">🏛️</div>
+        <div class="rcard-body">
+          <div style="display:flex;justify-content:space-between;">
+            <div class="rcard-title">BMC van</div>
+            <div class="rcard-time">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              42m
+            </div>
+          </div>
+          <div class="rcard-addr">Linking Rd, opp. Globus</div>
+          <div class="rcard-meta">
+            <span class="rcard-reporter">Amit S.</span>
+            <span class="karma-pill">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              88
+            </span>
+            <span class="rcard-confirms">· 2 confirmed</span>
+          </div>
+        </div>
+      </div>
+      <div class="vote-row">
+        <button class="vote-btn confirm" onclick="castVote(this,'confirm')">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Confirm
+        </button>
+        <button class="vote-btn wrong" onclick="castVote(this,'wrong')">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Wrong
+        </button>
+      </div>
+    </div>
+
+    <!-- safe alternatives -->
+    <div class="sec-head" style="margin-top:4px;">
+      <h3>Safe spots nearby</h3>
+    </div>
+    <div class="safe-row" onclick="openPSheet('Andheri Multilevel','open','₹40/hr','UPI & Cash','Covered','3 min ago · 4 Mumbaikars','380m away')">
+      <div class="safe-dot"></div>
+      <div class="safe-info">
+        <strong>Andheri Multilevel Parking</strong>
+        <small>Open · ₹40/hr · confirmed 3 min ago</small>
+      </div>
+      <div class="safe-dist">380m</div>
+    </div>
+    <div class="safe-row" onclick="openPSheet('West Bandra Basement','open','₹30/hr','Cash only','Covered','Just now · 1 driver','490m away')">
+      <div class="safe-dot"></div>
+      <div class="safe-info">
+        <strong>West Bandra Basement</strong>
+        <small>Open · ₹30/hr · confirmed just now</small>
+      </div>
+      <div class="safe-dist">490m</div>
+    </div>
+  </div>
+
+  <!-- bottom nav (same) -->
+  <div class="bnav">
+    <button class="bnav-btn" id="nb-park2" onclick="switchTab('map')">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      <span>Parking</span>
+    </button>
+    <button class="bnav-fab" onclick="openReport()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="bnav-btn active" id="nb-tow2" onclick="switchTab('tow')">
+      <svg viewBox="0 0 24 24"><path d="M3 17h11v2H3zM13 11h4l3 4H3v-2l3-3 3-3 4 4z"/><circle cx="6.5" cy="19.5" r="1.5"/><circle cx="16.5" cy="19.5" r="1.5"/></svg>
+      <span>Tow Radar</span>
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════ REPORT SHEET ════════════════════ -->
+<div class="overlay" id="rOverlay" onclick="closeReport()"></div>
+<div class="sheet" id="rSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title">New report</div>
+    <button class="sheet-close" onclick="closeReport()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body">
+
+    <!-- step 1 -->
+    <div>
+      <div class="step-label"><div class="step-num">1</div><div class="step-text">What's happening?</div></div>
+      <div class="type-grid">
+        <button class="type-btn" onclick="selType(this,'parking_open')"><div class="type-dot g"></div>Parking Open</button>
+        <button class="type-btn" onclick="selType(this,'parking_full')"><div class="type-dot y"></div>Parking Full</button>
+        <button class="type-btn" onclick="selType(this,'tow_spotted')"><div class="type-dot r"></div>Tow Spotted</button>
+        <button class="type-btn" onclick="selType(this,'tow_cleared')"><div class="type-dot b"></div>Tow Cleared</button>
+      </div>
+    </div>
+
+    <!-- step 2 -->
+    <div>
+      <div class="step-label"><div class="step-num">2</div><div class="step-text">Where?</div></div>
+      <div class="loc-pill">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        <div class="loc-pill-text">Pali Naka, Bandra West</div>
+        <button class="loc-pill-edit">Edit</button>
+      </div>
+    </div>
+
+    <!-- step 3 -->
+    <div>
+      <div class="step-label"><div class="step-num">3</div><div class="step-text">Add detail (optional)</div></div>
+      <textarea class="detail-inp" rows="2" placeholder="e.g. Tow truck near corner shop" maxlength="120"></textarea>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" disabled onclick="doSubmit()">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Submit · +5 karma
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════ PARKING DETAIL SHEET ════════════════════ -->
+<div class="overlay" id="pOverlay" onclick="closePSheet()"></div>
+<div class="psheet" id="pSheet">
+  <div class="ps-handle"></div>
+  <div class="ps-pad">
+    <div class="ps-name" id="psName"></div>
+    <div class="ps-tags"><span class="ps-tag" id="psStatus"></span><span class="ps-tag" id="psType"></span><span class="ps-tag" id="psPay"></span></div>
+    <div class="ps-divider"></div>
+    <div class="ps-row"><label>Direction</label><span id="psDist"></span></div>
+    <div class="ps-row"><label>Price</label><span id="psPrice"></span></div>
+    <div class="ps-row"><label>Payment</label><span id="psPay2"></span></div>
+    <div class="ps-row"><label>Last confirmed</label><span id="psConf"></span></div>
+    <div class="ps-vbox">
+      <span style="font-size:22px">✅</span>
+      <div class="ps-vbox-t">
+        <strong>Community verified</strong>
+        <small id="psVerSub"></small>
+      </div>
+    </div>
+    <button class="ps-btn" onclick="markHere()">I'm parking here</button>
+  </div>
+</div>
+
+<!-- undo toast -->
+<div class="undo-toast" id="undoToast">
+  <div class="undo-toast-text" id="undoText">Reported: Parking Open</div>
+  <button class="undo-toast-btn" onclick="undoReport()">Undo</button>
+</div>
+
+<script>
+// ── MAP ─────────────────────────────────────────────────────────
+const map = L.map('map',{
+  zoomControl:false, attributionControl:false,
+  dragging:true, tap:true,
+}).setView([19.0596,72.8295],15.5);
+
+// CartoDB Positron — clean minimal base, responds well to teal CSS filter
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+  maxZoom:19,
+  subdomains:'abcd',
+  attribution:'© <a href="https://carto.com/">CARTO</a>'
+}).addTo(map);
+
+// nav-arrow icon factory
+function navIcon(cls, isTow){
+  const inner = isTow
+    ? `<span class="tow-emoji">🚨</span>`
+    : `<svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`;
+  return L.divIcon({
+    className:'',
+    html:`<div class="nav-pin ${cls}"><div class="nav-pin-circle">${inner}</div></div>`,
+    iconSize:[44,52], iconAnchor:[22,52],
+  });
+}
+
+const spots=[
+  {lat:19.0617,lon:72.8270,cls:'green',  name:'Andheri Multilevel Parking',status:'open',   price:'₹40/hr',pay:'UPI & Cash',type:'Covered',  conf:'3 min ago · 4 Mumbaikars',dist:'← 200m, 2 min'},
+  {lat:19.0575,lon:72.8265,cls:'green',  name:'West Bandra Basement',       status:'open',   price:'₹30/hr',pay:'Cash only', type:'Covered',  conf:'Just now · 1 driver',     dist:'↑ 90m, 1 min'},
+  {lat:19.0582,lon:72.8330,cls:'yellow', name:'Linking Rd Parking',         status:'limited',price:'₹60/hr',pay:'UPI only',  type:'Open air', conf:'11 min ago · 2 drivers',  dist:'→ 350m, 4 min'},
+  {lat:19.0550,lon:72.8300,cls:'grey',   name:'SV Road Side Parking',       status:'unknown',price:'₹20/hr',pay:'Cash',      type:'Open air', conf:'47 min ago · 1 driver',   dist:'↙ 600m, 6 min'},
+  {lat:19.0600,lon:72.8295,cls:'tow',    name:'TOW', status:'tow', isTow:true},
+];
+
+spots.forEach(s=>{
+  const m=L.marker([s.lat,s.lon],{icon:navIcon(s.cls,s.isTow)}).addTo(map);
+  m.on('click',()=>{
+    if(s.status==='tow'){switchTab('tow');return;}
+    openPSheet(s.name,s.status,s.price,s.pay,s.type,s.conf,s.dist);
+  });
+});
+
+// user location — pulse ring + solid dot (matches mockup)
+L.marker([19.0596,72.8295],{
+  icon: L.divIcon({
+    className:'',
+    html:`<div style="
+      width:80px;height:80px;border-radius:50%;
+      background:rgba(59,130,246,.15);
+      display:flex;align-items:center;justify-content:center;
+    "><div style="
+      width:18px;height:18px;border-radius:50%;
+      background:#3b82f6;border:3px solid #fff;
+      box-shadow:0 0 0 3px rgba(59,130,246,.3);
+    "></div></div>`,
+    iconSize:[80,80], iconAnchor:[40,40],
+  }),
+  zIndexOffset:-100,
+}).addTo(map);
+
+// ── TABS ────────────────────────────────────────────────────────
+function switchTab(tab){
+  document.getElementById('map-screen').classList.toggle('on',tab==='map');
+  document.getElementById('tow-screen').classList.toggle('on',tab==='tow');
+  document.getElementById('nb-park').classList.toggle('active',tab==='map');
+  document.getElementById('nb-tow').classList.toggle('active',tab==='tow');
+  document.getElementById('nb-park2').classList.toggle('active',tab==='map');
+  document.getElementById('nb-tow2').classList.toggle('active',tab==='tow');
+  if(tab==='map') setTimeout(()=>map.invalidateSize(),50);
+}
+
+// ── REPORT ──────────────────────────────────────────────────────
+let selTypeVal=null;
+function openReport(){
+  selTypeVal=null;
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('submitBtn').disabled=true;
+  document.getElementById('rOverlay').classList.add('on');
+  document.getElementById('rSheet').classList.add('on');
+}
+function closeReport(){
+  document.getElementById('rOverlay').classList.remove('on');
+  document.getElementById('rSheet').classList.remove('on');
+}
+function selType(btn,type){
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  selTypeVal=type;
+  document.getElementById('submitBtn').disabled=false;
+}
+function doSubmit(){
+  closeReport();
+  const labels={'parking_open':'Parking Open','parking_full':'Parking Full','tow_spotted':'Tow Spotted','tow_cleared':'Tow Cleared'};
+  const label=labels[selTypeVal]||'Report';
+  document.getElementById('undoText').textContent='Reported: '+label+' · +5 karma';
+  const bar=document.getElementById('undoToast');
+  bar.classList.add('on');
+  bar._t=setTimeout(()=>bar.classList.remove('on'),3500);
+}
+function undoReport(){
+  const bar=document.getElementById('undoToast');
+  clearTimeout(bar._t);bar.classList.remove('on');
+  showToast('Report removed.');
+}
+
+// ── PARKING SHEET ────────────────────────────────────────────────
+function openPSheet(name,status,price,pay,type,conf,dist){
+  document.getElementById('psName').textContent=name;
+  document.getElementById('psPrice').textContent=price;
+  document.getElementById('psPay').textContent=pay;
+  document.getElementById('psPay2').textContent=pay;
+  document.getElementById('psType').textContent=type;
+  document.getElementById('psConf').textContent=conf;
+  document.getElementById('psDist').textContent=dist;
+  document.getElementById('psVerSub').textContent=conf;
+  const el=document.getElementById('psStatus');
+  el.textContent=status==='open'?'Open':status==='limited'?'Limited':'Unknown';
+  el.className='ps-tag '+(status==='open'?'g':status==='limited'?'y':'');
+  document.getElementById('pOverlay').classList.add('on');
+  document.getElementById('pSheet').classList.add('on');
+}
+function closePSheet(){
+  document.getElementById('pOverlay').classList.remove('on');
+  document.getElementById('pSheet').classList.remove('on');
+}
+function markHere(){
+  closePSheet();
+  showToast('📍 Marked! You\'re in the contributor loop. +5 karma');
+}
+
+// ── VOTE ─────────────────────────────────────────────────────────
+function castVote(btn,type){
+  const row=btn.closest('.vote-row');
+  row.querySelectorAll('.vote-btn').forEach(b=>b.classList.remove('voted'));
+  btn.classList.add('voted');
+}
+
+// ── TIPS ─────────────────────────────────────────────────────────
+function dismissTip(id){ document.getElementById(id).classList.add('gone'); }
+setTimeout(()=>dismissTip('mapTip'),5000);
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:2000;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+</script>
+</body>
+</html>
