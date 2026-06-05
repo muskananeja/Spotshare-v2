@@ -9,8 +9,8 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 :root{
-  --green:#16a34a; --yellow:#d97706; --red:#dc2626; --blue:#2563eb;
-  --ink:#0f172a; --sub:#64748b; --border:#e2e8f0; --bg:#f0f5f8;
+  --green:#16a34a;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;
+  --ink:#0f172a;--sub:#64748b;--border:#e2e8f0;--bg:#f0f5f8;
   --nav:64px;
 }
 html,body{height:100%;overflow:hidden;background:#000;}
@@ -21,17 +21,20 @@ body{
   box-shadow:0 0 60px rgba(0,0,0,.5);
 }
 
-/* ── SCREENS ── */
 .screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);}
 .screen.on{display:flex;}
 
-/* ════════ MAP ════════ */
+/* ── MAP ── */
 #map{position:absolute;inset:0;z-index:0;}
 .leaflet-tile{filter:hue-rotate(168deg) saturate(.38) brightness(1.06) contrast(.92);}
 .leaflet-container{background:#d9eaf0;}
 
-/* top search */
-.top-bar{position:absolute;top:0;left:0;right:0;z-index:300;padding:48px 14px 0;pointer-events:none;}
+/* zone header over map */
+.zone-header{
+  position:absolute;top:0;left:0;right:0;z-index:300;
+  padding:48px 14px 0;pointer-events:none;
+  display:flex;flex-direction:column;gap:8px;
+}
 .search-wrap{background:#fff;border-radius:18px;box-shadow:0 2px 16px rgba(0,0,0,.13);pointer-events:all;overflow:hidden;}
 .search-row{display:flex;align-items:center;gap:10px;padding:12px 14px;}
 .search-row svg{width:18px;height:18px;stroke:var(--sub);fill:none;flex-shrink:0;stroke-width:2;}
@@ -46,6 +49,16 @@ body{
 .sri-main{font-weight:600;}
 .sri-sub{font-size:12px;color:var(--sub);}
 
+/* zone pill */
+.zone-pill{
+  background:#fff;border-radius:12px;padding:8px 14px;
+  display:flex;align-items:center;gap:8px;align-self:flex-start;
+  box-shadow:0 2px 10px rgba(0,0,0,.1);pointer-events:all;
+}
+.zone-pill-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.zone-pill-text{font-size:13px;font-weight:700;color:var(--ink);}
+.zone-pill-count{font-size:13px;color:var(--sub);}
+
 /* nav-arrow pins */
 .nav-pin{width:44px;height:52px;display:flex;flex-direction:column;align-items:center;cursor:pointer;}
 .nav-pin-circle{
@@ -58,23 +71,24 @@ body{
 .nav-pin.green  .nav-pin-circle::after{border-top-color:var(--green);}
 .nav-pin.yellow .nav-pin-circle{border-color:var(--yellow);}
 .nav-pin.yellow .nav-pin-circle::after{border-top-color:var(--yellow);}
-.nav-pin.grey   .nav-pin-circle{border-color:#94a3b8;}
-.nav-pin.grey   .nav-pin-circle::after{border-top-color:#94a3b8;}
 .nav-pin.tow    .nav-pin-circle{border-color:var(--red);background:#fef2f2;}
 .nav-pin.tow    .nav-pin-circle::after{border-top-color:var(--red);}
+/* report highlight pin */
+.nav-pin.report-pin .nav-pin-circle{border-color:var(--blue);background:#eff6ff;animation:pulse-pin 1.5s ease-in-out 3;}
+@keyframes pulse-pin{0%,100%{box-shadow:0 3px 12px rgba(37,99,235,.3);}50%{box-shadow:0 3px 24px rgba(37,99,235,.7);}}
 .nav-arrow{width:20px;height:20px;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
 .nav-pin.green  .nav-arrow{stroke:var(--green);}
 .nav-pin.yellow .nav-arrow{stroke:var(--yellow);}
-.nav-pin.grey   .nav-arrow{stroke:#94a3b8;}
+.nav-pin.report-pin .nav-arrow{stroke:var(--blue);}
 .nearest-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;}
 
 /* user dot */
 .user-dot-wrap{width:80px;height:80px;border-radius:50%;background:rgba(37,99,235,.14);display:flex;align-items:center;justify-content:center;}
 .user-dot-inner{width:18px;height:18px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 0 0 3px rgba(37,99,235,.28);}
 
-/* bottom swipe cards */
+/* swipe cards */
 .bottom-cards{
-  position:absolute;z-index:300;bottom:calc(var(--nav) + 10px);
+  position:absolute;z-index:300;bottom:calc(var(--nav)+10px);
   left:0;right:0;padding:0 14px;
   display:flex;gap:10px;
   overflow-x:auto;scroll-snap-type:x mandatory;
@@ -82,37 +96,34 @@ body{
 }
 .bottom-cards::-webkit-scrollbar{display:none;}
 .park-card{
-  flex-shrink:0;width:220px;background:#fff;border-radius:16px;
+  flex-shrink:0;width:230px;background:#fff;border-radius:16px;
   padding:12px 14px;box-shadow:0 4px 18px rgba(0,0,0,.16);
   scroll-snap-align:start;cursor:pointer;transition:transform .15s;
 }
 .park-card:active{transform:scale(.97);}
-.pc-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.pc-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
 .pc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .pc-dot.green{background:var(--green);}
 .pc-dot.yellow{background:var(--yellow);}
-.pc-dot.grey{background:#94a3b8;}
 .pc-name{font-size:13px;font-weight:700;color:var(--ink);flex:1;line-height:1.2;}
 .pc-price{font-size:13px;font-weight:800;color:var(--ink);flex-shrink:0;}
 .pc-dist{font-size:26px;font-weight:900;color:var(--ink);line-height:1;}
 .pc-dist-unit{font-size:12px;color:var(--sub);font-weight:600;}
-.pc-meta{font-size:11px;color:var(--sub);margin-top:4px;}
+.pc-meta{font-size:11px;color:var(--sub);margin-top:3px;}
 
-/* legend + locate */
-.map-legend{position:absolute;z-index:300;bottom:calc(var(--nav) + 120px);left:14px;background:#fff;border-radius:20px;padding:7px 12px;display:flex;gap:12px;font-size:11px;font-weight:600;color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.1);}
+/* map extras */
+.map-legend{position:absolute;z-index:300;bottom:calc(var(--nav)+120px);left:14px;background:#fff;border-radius:20px;padding:7px 12px;display:flex;gap:12px;font-size:11px;font-weight:600;color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.1);}
 .ld{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px;}
-.locate-btn{position:absolute;z-index:300;bottom:calc(var(--nav) + 120px);right:14px;width:42px;height:42px;background:#fff;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.14);}
+.locate-btn{position:absolute;z-index:300;bottom:calc(var(--nav)+120px);right:14px;width:42px;height:42px;background:#fff;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.14);}
 .locate-btn svg{width:20px;height:20px;stroke:var(--blue);fill:none;stroke-width:2;}
 
-/* ════════ BOTTOM NAV ════════ */
+/* ── BOTTOM NAV ── */
 .bnav{position:absolute;bottom:0;left:0;right:0;z-index:400;height:var(--nav);background:#fff;border-top:1px solid var(--border);display:flex;align-items:center;padding-bottom:env(safe-area-inset-bottom,0);}
 .bnav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:100%;border:none;background:none;cursor:pointer;}
 .bnav-tab svg{width:22px;height:22px;stroke:var(--sub);fill:none;stroke-width:1.8;transition:stroke .2s;}
 .bnav-tab span{font-size:10px;font-weight:700;color:var(--sub);transition:color .2s;text-transform:uppercase;letter-spacing:.04em;}
 .bnav-tab.on svg{stroke:var(--blue);}
 .bnav-tab.on span{color:var(--blue);}
-
-/* REPORT FAB */
 .report-fab{
   width:64px;height:64px;border-radius:50%;background:var(--red);
   border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -123,7 +134,7 @@ body{
 .report-fab svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;}
 .report-fab-label{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;color:var(--red);white-space:nowrap;letter-spacing:.04em;text-transform:uppercase;}
 
-/* ════════ DRIVER REPORT FULLSCREEN — 4 massive quadrants ════════ */
+/* ── DRIVER REPORT FULLSCREEN ── */
 .driver-report{
   position:fixed;inset:0;z-index:1000;
   display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
@@ -131,10 +142,7 @@ body{
   opacity:0;pointer-events:none;transition:opacity .2s;
 }
 .driver-report.on{opacity:1;pointer-events:all;}
-.dr-btn{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  border:none;cursor:pointer;gap:10px;transition:filter .1s;
-}
+.dr-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;border:none;cursor:pointer;gap:10px;transition:filter .1s;}
 .dr-btn:active{filter:brightness(.85);}
 .dr-btn.po{background:#16a34a;}
 .dr-btn.pf{background:#dc2626;}
@@ -152,35 +160,7 @@ body{
 .dr-close.on{opacity:1;pointer-events:all;}
 .dr-close svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;}
 
-/* submit flash */
-.submit-flash{
-  position:fixed;inset:0;z-index:1200;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-  max-width:390px;margin:0 auto;
-  opacity:0;pointer-events:none;transition:opacity .18s;
-}
-.submit-flash.on{opacity:1;}
-.sf-bg{position:absolute;inset:0;}
-.sf-content{position:relative;text-align:center;padding:0 24px;}
-.sf-icon{font-size:72px;margin-bottom:8px;}
-.sf-title{color:#fff;font-size:26px;font-weight:900;}
-.sf-sub{color:rgba(255,255,255,.8);font-size:14px;margin-top:4px;}
-.sf-karma{display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:8px 20px;color:#fff;font-size:15px;font-weight:700;margin-top:10px;}
-
-/* undo bar */
-.undo-bar{
-  position:fixed;top:56px;left:50%;transform:translateX(-50%);
-  background:var(--ink);border-radius:14px;padding:12px 18px;
-  display:flex;align-items:center;gap:14px;z-index:1300;
-  box-shadow:0 4px 20px rgba(0,0,0,.3);
-  opacity:0;pointer-events:none;transition:opacity .3s;
-  width:calc(100% - 40px);max-width:340px;
-}
-.undo-bar.on{opacity:1;pointer-events:all;}
-.undo-text{color:#fff;font-size:13px;font-weight:500;flex:1;}
-.undo-btn{color:#60a5fa;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;}
-
-/* ════════ TOW RADAR ════════ */
+/* ── TOW RADAR ── */
 #tow-screen{overflow:hidden;}
 .tow-status-bg{flex-shrink:0;padding:52px 20px 22px;transition:background .4s;min-height:190px;display:flex;flex-direction:column;justify-content:flex-end;}
 .tow-status-bg.clear {background:#dcfce7;}
@@ -188,19 +168,17 @@ body{
 .tow-status-bg.danger{background:#fee2e2;}
 .tow-zone{font-size:11px;font-weight:700;color:rgba(0,0,0,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
 .tow-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;margin-bottom:10px;width:fit-content;}
-.tow-status-bg.clear  .tow-badge{background:#bbf7d0;color:#14532d;}
 .tow-status-bg.amber  .tow-badge{background:#fde68a;color:#78350f;}
+.tow-status-bg.clear  .tow-badge{background:#bbf7d0;color:#14532d;}
 .tow-status-bg.danger .tow-badge{background:#fca5a5;color:#7f1d1d;}
 .tow-headline{font-size:38px;font-weight:900;line-height:1.0;letter-spacing:-.02em;}
-.tow-status-bg.clear  .tow-headline{color:#14532d;}
 .tow-status-bg.amber  .tow-headline{color:#78350f;}
+.tow-status-bg.clear  .tow-headline{color:#14532d;}
 .tow-status-bg.danger .tow-headline{color:#7f1d1d;}
 .tow-stat-row{display:flex;gap:10px;margin-top:14px;}
 .tow-stat{background:rgba(255,255,255,.6);border-radius:12px;padding:8px 12px;flex:1;}
 .tow-stat-val{font-size:20px;font-weight:900;color:var(--ink);}
 .tow-stat-label{font-size:10px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
-
-/* minimal report list */
 .tow-list{flex:1;overflow-y:auto;background:#fff;border-radius:24px 24px 0 0;margin-top:-12px;padding:6px 0 calc(var(--nav)+20px);}
 .tow-list-handle{width:36px;height:4px;background:#e2e8f0;border-radius:2px;margin:10px auto 14px;}
 .rrow{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid #f8fafc;cursor:pointer;}
@@ -219,8 +197,6 @@ body{
 .vote-btn{flex:1;height:40px;border-radius:12px;border:1.5px solid var(--border);background:#f8fafc;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--ink);}
 .vote-btn.c.v{background:#dcfce7;border-color:#86efac;color:var(--green);}
 .vote-btn.w.v{background:#fee2e2;border-color:#fca5a5;color:var(--red);}
-
-/* safe spots */
 .safe-strip{padding:4px 18px 16px;}
 .safe-label{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;margin-top:8px;}
 .safe-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f8fafc;cursor:pointer;}
@@ -229,7 +205,7 @@ body{
 .safe-name{font-size:13px;font-weight:600;color:var(--ink);flex:1;}
 .safe-dist{font-size:13px;font-weight:700;color:var(--sub);}
 
-/* ════════ PARKING SHEET ════════ */
+/* ── PARKING DETAIL SHEET ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:opacity .3s;max-width:390px;margin:0 auto;}
 .overlay.on{opacity:1;pointer-events:all;}
 .psheet{position:fixed;bottom:0;left:50%;transform:translate(-50%,100%);width:100%;max-width:390px;background:#fff;border-radius:24px 24px 0 0;z-index:600;transition:transform .35s cubic-bezier(.32,.72,0,1);padding-bottom:32px;}
@@ -241,28 +217,33 @@ body{
 .ps-tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:8px;background:#f1f5f9;color:var(--sub);}
 .ps-tag.g{background:#dcfce7;color:#15803d;}
 .ps-tag.y{background:#fef9c3;color:#a16207;}
-.ps-dist-block{background:#f8fafc;border-radius:16px;padding:16px;margin-top:14px;display:flex;align-items:center;gap:14px;}
-.ps-dist-num{font-size:36px;font-weight:900;color:var(--ink);line-height:1;}
-.ps-dist-unit{font-size:14px;font-weight:600;color:var(--sub);}
+.ps-dist-block{background:#f8fafc;border-radius:16px;padding:14px 16px;margin-top:14px;display:flex;align-items:center;gap:14px;}
+.ps-dist-num{font-size:36px;font-weight:900;color:var(--ink);line-height:1;flex-shrink:0;}
+.ps-dist-detail{}
+.ps-dist-unit{font-size:13px;font-weight:600;color:var(--sub);}
 .ps-dist-dir{font-size:13px;color:var(--sub);margin-top:2px;}
 .ps-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f8fafc;}
 .ps-row:last-of-type{border:none;}
 .ps-row label{font-size:14px;color:var(--sub);}
-.ps-row span{font-size:14px;font-weight:600;color:var(--ink);}
-.ps-vbox{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;padding:11px 14px;display:flex;align-items:center;gap:10px;margin-top:10px;}
-.ps-vbox-t strong{font-size:13px;color:#15803d;display:block;}
-.ps-vbox-t small{font-size:12px;color:var(--sub);}
-.ps-cta{width:100%;background:var(--ink);color:#fff;border:none;border-radius:16px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;}
+.ps-row span{font-size:14px;font-weight:600;color:var(--ink);text-align:right;}
+/* last confirmed row — subtle */
+.ps-row.conf-row label{font-size:13px;color:#94a3b8;}
+.ps-row.conf-row span{font-size:13px;color:#94a3b8;font-weight:500;}
+/* action buttons */
+.ps-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+.ps-cta{height:50px;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;}
 .ps-cta:active{opacity:.85;}
+.ps-cta.open{background:var(--green);color:#fff;}
+.ps-cta.full{background:#fee2e2;color:var(--red);}
 </style>
 </head>
 <body>
 
-<!-- ════════ MAP SCREEN ════════ -->
+<!-- ════════════════════ MAP SCREEN ════════════════════ -->
 <div class="screen on" id="map-screen">
   <div id="map"></div>
 
-  <div class="top-bar">
+  <div class="zone-header">
     <div class="search-wrap">
       <div class="search-row">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -271,12 +252,16 @@ body{
       </div>
       <div class="search-results" id="searchResults"></div>
     </div>
+    <div class="zone-pill">
+      <div class="zone-pill-dot"></div>
+      <div class="zone-pill-text">Bandra West</div>
+      <div class="zone-pill-count" id="zonePillCount">· loading…</div>
+    </div>
   </div>
 
   <div class="map-legend">
     <span><span class="ld" style="background:var(--green)"></span>Open</span>
     <span><span class="ld" style="background:var(--yellow)"></span>Limited</span>
-    <span><span class="ld" style="background:#94a3b8"></span>Unknown</span>
   </div>
 
   <button class="locate-btn" onclick="locateUser()">
@@ -301,7 +286,7 @@ body{
   </div>
 </div>
 
-<!-- ════════ TOW RADAR SCREEN ════════ -->
+<!-- ════════════════════ TOW RADAR ════════════════════ -->
 <div class="screen" id="tow-screen">
   <div class="tow-status-bg amber">
     <div class="tow-zone">Bandra West · now</div>
@@ -351,11 +336,14 @@ body{
 
     <div class="safe-strip">
       <div class="safe-label">Safe spots nearby</div>
-      <div class="safe-item" onclick="switchTab('map');openPSheet('Andheri Multilevel','open','₹40/hr','UPI & Cash','Covered','3 min ago · 4 drivers',200,'←')">
+      <div class="safe-item" onclick="switchTab('map');setTimeout(()=>openSpot(spots.find(s=>s.id===1)),300)">
         <div class="safe-dot"></div><div class="safe-name">Andheri Multilevel Parking</div><div class="safe-dist">200m</div>
       </div>
-      <div class="safe-item" onclick="switchTab('map');openPSheet('West Bandra Basement','open','₹30/hr','Cash only','Covered','Just now · 1 driver',90,'↑')">
-        <div class="safe-dot"></div><div class="safe-name">West Bandra Basement</div><div class="safe-dist">90m</div>
+      <div class="safe-item" onclick="switchTab('map');setTimeout(()=>openSpot(spots.find(s=>s.id===2)),300)">
+        <div class="safe-dot"></div><div class="safe-name">Pali Naka Parking</div><div class="safe-dist">340m</div>
+      </div>
+      <div class="safe-item" onclick="switchTab('map');setTimeout(()=>openSpot(spots.find(s=>s.id===5)),300)">
+        <div class="safe-dot"></div><div class="safe-name">Chapel Road Parking</div><div class="safe-dist">480m</div>
       </div>
     </div>
   </div>
@@ -376,18 +364,18 @@ body{
   </div>
 </div>
 
-<!-- ════════ DRIVER REPORT — 4 full-screen quadrants ════════ -->
+<!-- ════════════════════ DRIVER REPORT FULLSCREEN ════════════════════ -->
 <div class="driver-report" id="driverReport">
-  <button class="dr-btn po" onclick="submitReport('Parking Open','🅿️','#16a34a')">
+  <button class="dr-btn po" onclick="submitReport('Parking Open','🅿️','#16a34a','open')">
     <div class="dr-icon">🅿️</div><div class="dr-label">Parking Open</div><div class="dr-sub">Free spot right now</div>
   </button>
-  <button class="dr-btn pf" onclick="submitReport('Parking Full','🚫','#dc2626')">
+  <button class="dr-btn pf" onclick="submitReport('Parking Full','🚫','#dc2626','full')">
     <div class="dr-icon">🚫</div><div class="dr-label">Parking Full</div><div class="dr-sub">No space available</div>
   </button>
-  <button class="dr-btn ts" onclick="submitReport('Tow Spotted','🚛','#ea580c')">
+  <button class="dr-btn ts" onclick="submitReport('Tow Spotted','🚛','#ea580c','tow')">
     <div class="dr-icon">🚛</div><div class="dr-label">Tow / BMC Van</div><div class="dr-sub">Active tow activity</div>
   </button>
-  <button class="dr-btn tc" onclick="submitReport('Tow Cleared','✅','#2563eb')">
+  <button class="dr-btn tc" onclick="submitReport('Tow Cleared','✅','#2563eb','clear')">
     <div class="dr-icon">✅</div><div class="dr-label">Tow Cleared</div><div class="dr-sub">Activity has stopped</div>
   </button>
 </div>
@@ -395,69 +383,85 @@ body{
   <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 </button>
 
-<!-- submit flash -->
-<div class="submit-flash" id="submitFlash">
-  <div class="sf-bg" id="sfBg"></div>
-  <div class="sf-content">
-    <div class="sf-icon" id="sfIcon">🎯</div>
-    <div class="sf-title" id="sfTitle">Reported!</div>
-    <div class="sf-sub">Drivers nearby can see this now</div>
-    <div class="sf-karma">+5 karma</div>
-  </div>
-</div>
-
-<!-- undo bar -->
-<div class="undo-bar" id="undoBar">
-  <div class="undo-text" id="undoText">Reported: Parking Open</div>
-  <button class="undo-btn" onclick="undoReport()">Undo</button>
-</div>
-
-<!-- parking detail sheet -->
+<!-- PARKING DETAIL SHEET -->
 <div class="overlay" id="psOverlay" onclick="closePSheet()"></div>
 <div class="psheet" id="psheet">
   <div class="ps-handle"></div>
   <div class="ps-body">
     <div class="ps-name" id="psName"></div>
-    <div class="ps-tags"><span class="ps-tag" id="psStatus"></span><span class="ps-tag" id="psType"></span><span class="ps-tag" id="psPay"></span></div>
+    <div class="ps-tags" id="psTags"></div>
     <div class="ps-dist-block">
-      <div><div class="ps-dist-num" id="psDist">90</div></div>
-      <div><div class="ps-dist-unit">metres away</div><div class="ps-dist-dir" id="psDir">↑ straight ahead</div></div>
+      <div class="ps-dist-num" id="psDist">–</div>
+      <div class="ps-dist-detail">
+        <div class="ps-dist-unit">metres away</div>
+        <div class="ps-dist-dir" id="psDir"></div>
+      </div>
     </div>
     <div class="ps-row"><label>Price</label><span id="psPrice"></span></div>
-    <div class="ps-row"><label>Payment</label><span id="psPay2"></span></div>
-    <div class="ps-row"><label>Last confirmed</label><span id="psConf"></span></div>
-    <div class="ps-vbox">
-      <span style="font-size:22px">✅</span>
-      <div class="ps-vbox-t"><strong>Community verified</strong><small id="psVerSub"></small></div>
+    <div class="ps-row"><label>Hours</label><span id="psHours"></span></div>
+    <div class="ps-row"><label>Payment</label><span id="psPay"></span></div>
+    <div class="ps-row"><label>Type</label><span id="psType"></span></div>
+    <div class="ps-row conf-row"><label>Last reported</label><span id="psConf"></span></div>
+    <div class="ps-actions">
+      <button class="ps-cta open" onclick="markSpot('open')">✓ Spot is Open</button>
+      <button class="ps-cta full" onclick="markSpot('full')">✗ Spot is Full</button>
     </div>
-    <button class="ps-cta" onclick="markHere()">I'm parking here · +5 karma</button>
   </div>
 </div>
 
 <script>
+// ═══════════ DATA — 10 real Bandra West spots ═══════════
+const spots = [
+  {id:1,  lat:19.0617,lon:72.8270, cls:'green',  name:'Andheri Multilevel Parking', status:'open',   price:'₹40/hr',  hours:'7am–11pm', pay:'UPI & Cash', type:'Covered lot',    conf:'3 min ago · 4 drivers'},
+  {id:2,  lat:19.0580,lon:72.8268, cls:'green',  name:'Pali Naka Parking',           status:'open',   price:'₹30/hr',  hours:'6am–12am', pay:'Cash',       type:'Open lot',       conf:'12 min ago · 2 drivers'},
+  {id:3,  lat:19.0563,lon:72.8295, cls:'yellow', name:'Linking Rd Parking',          status:'limited',price:'₹60/hr',  hours:'8am–10pm', pay:'UPI only',   type:'Open lot',       conf:'18 min ago · 3 drivers'},
+  {id:4,  lat:19.0601,lon:72.8320, cls:'green',  name:'Mehboob Studios Parking',     status:'open',   price:'₹25/hr',  hours:'9am–9pm',  pay:'Cash',       type:'Covered lot',    conf:'7 min ago · 1 driver'},
+  {id:5,  lat:19.0570,lon:72.8250, cls:'green',  name:'Chapel Road Parking',         status:'open',   price:'₹20/hr',  hours:'Open 24h', pay:'Cash',       type:'Street parking', conf:'31 min ago · 2 drivers'},
+  {id:6,  lat:19.0590,lon:72.8340, cls:'green',  name:'Waterfield Rd Parking',       status:'open',   price:'₹35/hr',  hours:'7am–11pm', pay:'UPI & Cash', type:'Open lot',       conf:'5 min ago · 3 drivers'},
+  {id:7,  lat:19.0548,lon:72.8265, cls:'yellow', name:'Perry Road Side Parking',     status:'limited',price:'₹15/hr',  hours:'Open 24h', pay:'Cash',       type:'Street parking', conf:'22 min ago · 1 driver'},
+  {id:8,  lat:19.0608,lon:72.8285, cls:'green',  name:'16th Road Parking',           status:'open',   price:'₹20/hr',  hours:'Open 24h', pay:'Cash',       type:'Street parking', conf:'9 min ago · 2 drivers'},
+  {id:9,  lat:19.0558,lon:72.8310, cls:'green',  name:'St Andrews Rd Parking',       status:'open',   price:'₹30/hr',  hours:'7am–10pm', pay:'UPI & Cash', type:'Open lot',       conf:'41 min ago · 1 driver'},
+  {id:10, lat:19.0535,lon:72.8290, cls:'yellow', name:'Reclamation Multilevel',      status:'limited',price:'₹50/hr',  hours:'6am–12am', pay:'UPI & Cash', type:'Covered lot',    conf:'2 min ago · 6 drivers'},
+];
+
+// Only show open or limited — never unknown
+const visibleSpots = () => spots.filter(s => s.status === 'open' || s.status === 'limited');
+
 // ═══════════ MAP ═══════════
 let userLat=19.0596, userLon=72.8295, userMarker=null;
 
-const map=L.map('map',{zoomControl:false,attributionControl:false,dragging:true,tap:true})
+const map = L.map('map',{zoomControl:false,attributionControl:false,dragging:true,tap:true})
   .setView([userLat,userLon],15.5);
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
   maxZoom:19,subdomains:'abcd'
 }).addTo(map);
 
-const spots=[
-  {id:1,lat:19.0617,lon:72.8270,cls:'green', name:'Andheri Multilevel Parking',status:'open',   price:'₹40/hr',pay:'UPI & Cash',type:'Covered', conf:'3 min ago · 4 drivers'},
-  {id:2,lat:19.0575,lon:72.8265,cls:'green', name:'West Bandra Basement',      status:'open',   price:'₹30/hr',pay:'Cash only', type:'Covered', conf:'Just now · 1 driver'},
-  {id:3,lat:19.0582,lon:72.8330,cls:'yellow',name:'Linking Rd Parking',        status:'limited',price:'₹60/hr',pay:'UPI only',  type:'Open air',conf:'11 min ago · 2 drivers'},
-  {id:4,lat:19.0550,lon:72.8300,cls:'grey',  name:'SV Road Side Parking',      status:'unknown',price:'₹20/hr',pay:'Cash',      type:'Open air',conf:'47 min ago · 1 driver'},
-];
+// tow pin (static)
+const towIcon = () => L.divIcon({
+  className:'',
+  html:`<div class="nav-pin tow"><div class="nav-pin-circle"><span style="font-size:20px">🚨</span></div></div>`,
+  iconSize:[44,52],iconAnchor:[22,52],
+});
+const towMarker = L.marker([19.0600,72.8295],{icon:towIcon()}).addTo(map);
+towMarker.on('click',()=>switchTab('tow'));
+
+function mkIcon(cls, nearest, isReport){
+  const badge = nearest ? `<div class="nearest-badge">NEAREST</div>` : '';
+  const pinCls = isReport ? 'report-pin' : cls;
+  return L.divIcon({
+    className:'',
+    html:`<div class="nav-pin ${pinCls}"><div class="nav-pin-circle">${badge}<svg class="nav-arrow" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div></div>`,
+    iconSize:[44,52],iconAnchor:[22,52],
+  });
+}
 
 function haversine(a,b,c,d){
   const R=6371000,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180;
   const x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)**2;
   return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
-function bearing(a,b,c,d){
+function bearingLabel(a,b,c,d){
   const dl=(d-b)*Math.PI/180,
     y=Math.sin(dl)*Math.cos(c*Math.PI/180),
     x=Math.cos(a*Math.PI/180)*Math.sin(c*Math.PI/180)-Math.sin(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.cos(dl),
@@ -465,71 +469,69 @@ function bearing(a,b,c,d){
   return br<22.5||br>=337.5?'↑':br<67.5?'↗':br<112.5?'→':br<157.5?'↘':br<202.5?'↓':br<247.5?'↙':br<292.5?'←':'↖';
 }
 
-function mkIcon(cls,nearest){
-  return L.divIcon({
-    className:'',
-    html:`<div class="nav-pin ${cls}"><div class="nav-pin-circle">${nearest?'<div class="nearest-badge">NEAREST</div>':''}<svg class="nav-arrow" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div></div>`,
-    iconSize:[44,52],iconAnchor:[22,52],
-  });
-}
-function towIcon(){
-  return L.divIcon({
-    className:'',
-    html:`<div class="nav-pin tow"><div class="nav-pin-circle"><span style="font-size:20px">🚨</span></div></div>`,
-    iconSize:[44,52],iconAnchor:[22,52],
-  });
-}
+window._spotMarkers = [];
 
 function renderAll(){
-  spots.forEach(s=>{s.dist=haversine(userLat,userLon,s.lat,s.lon);s.dir=bearing(userLat,userLon,s.lat,s.lon);});
-  const sorted=[...spots].sort((a,b)=>a.dist-b.dist);
+  const visible = visibleSpots();
+  visible.forEach(s=>{
+    s.dist = haversine(userLat,userLon,s.lat,s.lon);
+    s.dir  = bearingLabel(userLat,userLon,s.lat,s.lon);
+  });
+  const sorted = [...visible].sort((a,b)=>a.dist-b.dist);
 
-  if(window._sm) window._sm.forEach(m=>map.removeLayer(m));
-  window._sm=[];
+  window._spotMarkers.forEach(m=>map.removeLayer(m));
+  window._spotMarkers = [];
 
   sorted.forEach((s,i)=>{
-    const m=L.marker([s.lat,s.lon],{icon:mkIcon(s.cls,i===0),zIndexOffset:i===0?100:0}).addTo(map);
-    m.on('click',()=>openPSheet(s.name,s.status,s.price,s.pay,s.type,s.conf,s.dist,s.dir));
-    window._sm.push(m);
+    const m = L.marker([s.lat,s.lon],{
+      icon:mkIcon(s.cls,i===0,false),
+      zIndexOffset:i===0?100:0,
+    }).addTo(map);
+    m.on('click',()=>openSpot(s));
+    window._spotMarkers.push(m);
   });
 
-  if(!window._towM){
-    window._towM=L.marker([19.0600,72.8295],{icon:towIcon()}).addTo(map);
-    window._towM.on('click',()=>switchTab('tow'));
-  }
-
   if(userMarker) map.removeLayer(userMarker);
-  userMarker=L.marker([userLat,userLon],{
+  userMarker = L.marker([userLat,userLon],{
     icon:L.divIcon({className:'',html:`<div class="user-dot-wrap"><div class="user-dot-inner"></div></div>`,iconSize:[80,80],iconAnchor:[40,40]}),
-    zIndexOffset:-100
+    zIndexOffset:-100,
   }).addTo(map);
 
-  // cards
-  const c=document.getElementById('bottomCards');
-  c.innerHTML=sorted.map((s,i)=>`
-    <div class="park-card" onclick="openPSheet('${s.name}','${s.status}','${s.price}','${s.pay}','${s.type}','${s.conf}',${s.dist},'${s.dir}')">
-      <div class="pc-top"><div class="pc-dot ${s.cls}"></div><div class="pc-name">${s.name}</div><div class="pc-price">${s.price}</div></div>
-      <div class="pc-dist">${s.dist<1000?s.dist:(s.dist/1000).toFixed(1)+'k'}<span class="pc-dist-unit">${s.dist<1000?'m':''} ${s.dir}</span></div>
-      <div class="pc-meta">${i===0?'<b>Nearest · </b>':''}${s.conf}</div>
+  // cards — only open/limited, sorted by distance
+  document.getElementById('bottomCards').innerHTML = sorted.map((s,i)=>`
+    <div class="park-card" onclick="openSpotById(${s.id})">
+      <div class="pc-top">
+        <div class="pc-dot ${s.cls}"></div>
+        <div class="pc-name">${s.name}</div>
+        <div class="pc-price">${s.price}</div>
+      </div>
+      <div>
+        <span class="pc-dist">${s.dist < 1000 ? s.dist : (s.dist/1000).toFixed(1)+'k'}</span>
+        <span class="pc-dist-unit">${s.dist < 1000 ? 'm' : ''} ${s.dir}</span>
+      </div>
+      <div class="pc-meta">${i===0?'<b>Nearest · </b>':''}${s.hours} · ${s.conf}</div>
     </div>
   `).join('');
+
+  // zone pill count
+  const openCount = visible.filter(s=>s.status==='open').length;
+  document.getElementById('zonePillCount').textContent = `· ${openCount} open nearby`;
 }
 
 // ═══════════ GEOLOCATION ═══════════
 function locateUser(){
-  if(!navigator.geolocation) return;
+  if(!navigator.geolocation){renderAll();return;}
   navigator.geolocation.getCurrentPosition(p=>{
-    userLat=p.coords.latitude; userLon=p.coords.longitude;
+    userLat=p.coords.latitude;userLon=p.coords.longitude;
     map.setView([userLat,userLon],16,{animate:true});
     renderAll();
   },()=>renderAll(),{enableHighAccuracy:true,timeout:8000});
 }
 
-// ═══════════ SEARCH ═══════════
+// ═══════════ SEARCH (Nominatim) ═══════════
 let sTimer=null;
 const sInput=document.getElementById('searchInput');
 const sResults=document.getElementById('searchResults');
-
 sInput.addEventListener('input',()=>{
   const q=sInput.value.trim();
   document.getElementById('searchClear').style.display=q?'block':'none';
@@ -537,7 +539,6 @@ sInput.addEventListener('input',()=>{
   if(q.length<3){sResults.style.display='none';return;}
   sTimer=setTimeout(()=>doSearch(q),420);
 });
-
 async function doSearch(q){
   try{
     const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=in`,{headers:{'Accept-Language':'en'}});
@@ -550,11 +551,7 @@ async function doSearch(q){
       </div>`).join('');
   }catch(e){sResults.style.display='none';}
 }
-
-function goTo(lat,lon,name){
-  sInput.value=name;sResults.style.display='none';
-  map.setView([+lat,+lon],16,{animate:true});
-}
+function goTo(lat,lon,name){sInput.value=name;sResults.style.display='none';map.setView([+lat,+lon],16,{animate:true});}
 function clearSearch(){sInput.value='';document.getElementById('searchClear').style.display='none';sResults.style.display='none';sInput.focus();}
 document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))sResults.style.display='none';});
 
@@ -567,7 +564,7 @@ function switchTab(t){
   if(t==='map')setTimeout(()=>map.invalidateSize(),50);
 }
 
-// ═══════════ DRIVER REPORT ═══════════
+// ═══════════ DRIVER REPORT — one tap, fly to map pin ═══════════
 function openDriverReport(){
   document.getElementById('driverReport').classList.add('on');
   document.getElementById('drClose').classList.add('on');
@@ -576,46 +573,71 @@ function closeDriverReport(){
   document.getElementById('driverReport').classList.remove('on');
   document.getElementById('drClose').classList.remove('on');
 }
-function submitReport(type,icon,color){
+
+function submitReport(type,icon,color,kind){
   closeDriverReport();
-  const f=document.getElementById('submitFlash');
-  document.getElementById('sfBg').style.background=color;
-  document.getElementById('sfIcon').textContent=icon;
-  document.getElementById('sfTitle').textContent=type+' reported!';
-  f.classList.add('on');
-  setTimeout(()=>{
-    f.classList.remove('on');
-    const bar=document.getElementById('undoBar');
-    document.getElementById('undoText').textContent='Reported: '+type+' · +5 karma';
-    bar.classList.add('on');
-    bar._t=setTimeout(()=>bar.classList.remove('on'),4000);
-  },1000);
+
+  // go to map immediately
+  switchTab('map');
+
+  // drop a highlighted "your report" pin at current location
+  const rLat = userLat + (Math.random()-0.5)*0.001;
+  const rLon = userLon + (Math.random()-0.5)*0.001;
+  const rPin = L.marker([rLat,rLon],{
+    icon: L.divIcon({
+      className:'',
+      html:`<div class="nav-pin report-pin"><div class="nav-pin-circle"><svg class="nav-arrow" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div></div>`,
+      iconSize:[44,52],iconAnchor:[22,52],
+    }),
+    zIndexOffset:200,
+  }).addTo(map);
+
+  map.setView([rLat,rLon],16,{animate:true});
+
+  // remove after 90s
+  setTimeout(()=>map.removeLayer(rPin),90000);
 }
-function undoReport(){const b=document.getElementById('undoBar');clearTimeout(b._t);b.classList.remove('on');}
 
 // ═══════════ PARKING SHEET ═══════════
-function openPSheet(name,status,price,pay,type,conf,dist,dir){
-  document.getElementById('psName').textContent=name;
-  document.getElementById('psPrice').textContent=price;
-  document.getElementById('psPay').textContent=pay;
-  document.getElementById('psPay2').textContent=pay;
-  document.getElementById('psType').textContent=type;
-  document.getElementById('psConf').textContent=conf;
-  document.getElementById('psVerSub').textContent=conf;
-  document.getElementById('psDist').textContent=dist<1000?dist:(dist/1000).toFixed(1)+'km';
-  document.getElementById('psDir').textContent=(dir||'')+(dir?' from you':'');
-  const el=document.getElementById('psStatus');
-  el.textContent=status==='open'?'Open':status==='limited'?'Limited':'Unknown';
-  el.className='ps-tag '+(status==='open'?'g':status==='limited'?'y':'');
+let activeSpot = null;
+function openSpotById(id){openSpot(spots.find(s=>s.id===id));}
+function openSpot(s){
+  if(!s)return;
+  activeSpot=s;
+  document.getElementById('psName').textContent=s.name;
+  document.getElementById('psPrice').textContent=s.price;
+  document.getElementById('psHours').textContent=s.hours;
+  document.getElementById('psPay').textContent=s.pay;
+  document.getElementById('psType').textContent=s.type;
+  document.getElementById('psConf').textContent=s.conf;
+  document.getElementById('psDist').textContent=s.dist<1000?s.dist:(s.dist/1000).toFixed(1)+'km';
+  document.getElementById('psDir').textContent=(s.dir||'')+' from you';
+
+  // tags — only status + type, no "community verified"
+  const statusLabel=s.status==='open'?'Open':'Limited';
+  const statusClass=s.status==='open'?'g':'y';
+  document.getElementById('psTags').innerHTML=
+    `<span class="ps-tag ${statusClass}">${statusLabel}</span><span class="ps-tag">${s.type}</span>`;
+
   document.getElementById('psOverlay').classList.add('on');
   document.getElementById('psheet').classList.add('on');
 }
-function closePSheet(){document.getElementById('psOverlay').classList.remove('on');document.getElementById('psheet').classList.remove('on');}
-function markHere(){
+function closePSheet(){
+  document.getElementById('psOverlay').classList.remove('on');
+  document.getElementById('psheet').classList.remove('on');
+  activeSpot=null;
+}
+
+function markSpot(action){
+  if(!activeSpot)return;
+  const label = action==='open' ? 'Spot Open reported' : 'Spot Full reported';
+  if(action==='full' && activeSpot){
+    // optimistically flip status
+    const s=spots.find(x=>x.id===activeSpot.id);
+    if(s){s.status='limited';s.cls='yellow';s.conf='Just now · you';}
+  }
   closePSheet();
-  const b=document.getElementById('undoBar');
-  document.getElementById('undoText').textContent='📍 Parking marked · +5 karma';
-  b.classList.add('on');b._t=setTimeout(()=>b.classList.remove('on'),3000);
+  renderAll();
 }
 
 // ═══════════ TOW VOTES ═══════════
@@ -632,6 +654,8 @@ function castV(btn){
 }
 
 // ═══════════ INIT ═══════════
+// pre-populate distances with default coords, then update with GPS
+spots.forEach(s=>{s.dist=haversine(userLat,userLon,s.lat,s.lon);s.dir=bearingLabel(userLat,userLon,s.lat,s.lon);});
 renderAll();
 locateUser();
 </script>
