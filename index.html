@@ -208,6 +208,7 @@ body {
   letter-spacing: -.02em; line-height: 1;
 }
 .p-card-dist span { font-size: 13px; font-weight: 600; color: var(--c-sub); margin-left: 2px; }
+.p-card-dist .unit-min { font-size: 13px; font-weight: 600; color: var(--c-sub); margin-left: 2px; }
 .p-card-meta {
   font-size: 11px; color: var(--c-sub); margin-top: 5px;
   display: flex; align-items: center; gap: 4px;
@@ -626,7 +627,7 @@ body {
 }
 .ps-dist-detail {}
 .ps-dist-unit { font-size: 14px; font-weight: 600; color: var(--c-sub); }
-.ps-dist-dir  { font-size: 13px; color: var(--c-sub); margin-top: 3px; }
+.ps-dist-dir  { font-size: 12px; color: #9ca3af; margin-top: 3px; }
 
 /* info rows */
 .ps-divider { height: 1px; background: var(--c-border); margin: 14px 0; }
@@ -889,7 +890,7 @@ body {
     <div class="ps-dist-row">
       <div class="ps-dist-num" id="psDist">–</div>
       <div class="ps-dist-detail">
-        <div class="ps-dist-unit">metres away</div>
+        <div class="ps-dist-unit">min away</div>
         <div class="ps-dist-dir" id="psDir"></div>
       </div>
     </div>
@@ -946,6 +947,9 @@ function haversine(a, b, c, d) {
   const x = Math.sin(dL/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)**2;
   return Math.round(R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x)));
 }
+// urban driving ~20 km/h = 333 m/min; minimum 1 min
+function toMins(metres) { return Math.max(1, Math.ceil(metres / 333)); }
+
 function bearing(a, b, c, d) {
   const dl = (d-b)*Math.PI/180,
     y = Math.sin(dl)*Math.cos(c*Math.PI/180),
@@ -1030,7 +1034,7 @@ function renderAll() {
         <span class="p-card-badge ${s.status}">${s.status === 'open' ? 'Open' : 'Limited'}</span>
       </div>
       <div>
-        <span class="p-card-dist">${s.dist < 1000 ? s.dist : (s.dist/1000).toFixed(1)+'k'}<span>${s.dist < 1000 ? 'm' : ''} ${s.dir.split(' ')[0]}</span></span>
+        <span class="p-card-dist">${toMins(s.dist)}<span class="unit-min"> min ${s.dir.split(' ')[0]}</span></span>
       </div>
       <div class="p-card-meta">
         ${i === 0 ? '<strong>Nearest · </strong>' : ''}${s.hours} · ${s.price}
@@ -1169,7 +1173,7 @@ function openSpot(s) {
   document.getElementById('psPay').textContent   = s.pay;
   document.getElementById('psType').textContent  = s.type;
   document.getElementById('psConf').textContent  = s.conf;
-  document.getElementById('psDist').textContent  = s.dist < 1000 ? s.dist : (s.dist/1000).toFixed(1)+'km';
+  document.getElementById('psDist').textContent  = toMins(s.dist);
   document.getElementById('psDir').textContent   = s.dir || '';
   document.getElementById('psTags').innerHTML =
     `<span class="ps-tag ${s.status}">${s.status === 'open' ? 'Open' : 'Limited'}</span>` +
