@@ -913,8 +913,12 @@ body {
      JAVASCRIPT
 ══════════════════════════════════════════ -->
 <script>
-// ─── DATA ────────────────────────────────────────────────────
-const spots = [
+// ─── SUPABASE CONFIG ─────────────────────────────────────────
+const SUPABASE_URL      = 'https://dojacrbhqzaptbkmhjrv.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_hp060qA1-V254ts7qbvZGA_ZShjmmST';
+
+// ─── FALLBACK DATA (used if Supabase is unreachable) ─────────
+const FALLBACK_SPOTS = [
   {id:1,  lat:19.0617,lon:72.8270, cls:'green',  name:'Andheri Multilevel Parking', status:'open',   price:'₹40/hr', hours:'7am – 11pm', pay:'UPI & Cash', type:'Covered lot',    conf:'3 min ago · 4 drivers'},
   {id:2,  lat:19.0580,lon:72.8268, cls:'green',  name:'Pali Naka Parking',           status:'open',   price:'₹30/hr', hours:'6am – 12am', pay:'Cash',       type:'Open lot',       conf:'12 min ago · 2 drivers'},
   {id:3,  lat:19.0563,lon:72.8295, cls:'yellow', name:'Linking Rd Parking',          status:'limited',price:'₹60/hr', hours:'8am – 10pm', pay:'UPI only',   type:'Open lot',       conf:'18 min ago · 3 drivers'},
@@ -926,6 +930,9 @@ const spots = [
   {id:9,  lat:19.0558,lon:72.8310, cls:'green',  name:'St Andrews Rd Parking',       status:'open',   price:'₹30/hr', hours:'7am – 10pm', pay:'UPI & Cash', type:'Open lot',       conf:'41 min ago · 1 driver'},
   {id:10, lat:19.0535,lon:72.8290, cls:'yellow', name:'Reclamation Multilevel',      status:'limited',price:'₹50/hr', hours:'6am – 12am', pay:'UPI & Cash', type:'Covered lot',    conf:'2 min ago · 6 drivers'},
 ];
+
+// ─── DATA ────────────────────────────────────────────────────
+let spots = [];
 const visible = () => spots.filter(s => s.status === 'open' || s.status === 'limited');
 
 // ─── MAP ─────────────────────────────────────────────────────
@@ -1287,12 +1294,36 @@ function dismissCoverageGap() {
 }
 
 // ─── INIT ────────────────────────────────────────────────────
-spots.forEach(s => {
-  s.dist = haversine(userLat, userLon, s.lat, s.lon);
-  s.dir  = bearing(userLat, userLon, s.lat, s.lon);
-});
-renderAll();
-locateUser();
+async function initApp() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/spots?select=*&order=id.asc`,
+      {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        signal: AbortSignal.timeout(5000), // 5-second timeout
+      }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error('Empty response');
+    // derive cls from status (not stored in DB)
+    spots = data.map(s => ({ ...s, cls: s.status === 'open' ? 'green' : 'yellow' }));
+    console.log(`Loaded ${spots.length} spots from Supabase`);
+  } catch (err) {
+    console.warn('Supabase unreachable, using fallback data:', err.message);
+    spots = FALLBACK_SPOTS;
+  }
+  spots.forEach(s => {
+    s.dist = haversine(userLat, userLon, s.lat, s.lon);
+    s.dir  = bearing(userLat, userLon, s.lat, s.lon);
+  });
+  renderAll();
+  locateUser();
+}
+initApp();
 </script>
 </body>
 </html>
