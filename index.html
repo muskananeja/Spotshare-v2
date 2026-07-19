@@ -1185,12 +1185,24 @@ let restrictions = [];
 let restrictionLayers = [];
 const RESTRICTION_ALERT_METRES = 60;
 
+function notificationYear(notification) {
+  if (!notification) return null;
+  const m = String(notification).match(/\b(20\d{2})\b(?!.*\b20\d{2}\b)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
 async function loadRestrictions() {
   try {
     const res = await fetch('./data/restrictions.geojson');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const geo = await res.json();
-    restrictions = geo.features || [];
+    const thisYear = new Date().getFullYear();
+    restrictions = (geo.features || []).filter(f => {
+      const p = f.properties;
+      if (p.permanence !== 'temporary') return true;
+      const yr = notificationYear(p.notification);
+      return yr === null || yr >= thisYear - 1;
+    });
     renderRestrictions();
     console.log(`Loaded ${restrictions.length} restriction segments`);
   } catch (err) {
@@ -1228,17 +1240,19 @@ function renderRestrictions() {
     const coords = f.geometry.coordinates; // [[lon,lat], ...]
     const latlngs = coords.map(([lon, lat]) => [lat, lon]);
     const p = f.properties;
+    const fuzzy = p.match_confidence && p.match_confidence !== 'exact';
 
     const line = L.polyline(latlngs, {
       color: '#dc2626',
       weight: 4,
-      opacity: 0.65,
+      opacity: fuzzy ? 0.45 : 0.65,
       dashArray: p.permanence === 'temporary' ? '6 6' : null,
     }).addTo(map);
     line.bindPopup(`
       <strong>${p.type}</strong><br>
       ${p.division} &middot; ${p.permanence}<br>
       ${p.pdf_url ? `<a href="${p.pdf_url}" target="_blank" rel="noopener">View notification</a>` : 'Notification: ' + p.notification}
+      ${fuzzy ? `<br><em style="color:#9ca3af">⚠ fuzzy match — location approximate</em>` : ''}
     `);
     restrictionLayers.push(line);
 
