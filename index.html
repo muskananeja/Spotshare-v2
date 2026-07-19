@@ -1360,7 +1360,7 @@ function openResultsScreen(lat, lon, name) {
         <div class="rl-card-dist-num">${walkMins(s.dist)}</div>
         <div class="rl-card-dist-unit">min walk</div>
       </div>
-      <button class="rl-card-directions" onclick="event.stopPropagation(); window.open('${s.gmaps}', '_blank', 'noopener')">
+      <button class="rl-card-directions" onclick="event.stopPropagation(); window.open(directionsUrl(${s.lat},${s.lon}), '_blank', 'noopener')">
         <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
       </button>
     </div>
@@ -1512,11 +1512,15 @@ function markSpot(action) {
   renderAll();
 }
 
+// builds a "start navigation" link (not just a place link) —
+// dir_action=navigate drops straight into turn-by-turn on the Maps app
+function directionsUrl(lat, lon) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving&dir_action=navigate`;
+}
+
 function openInGoogleMaps() {
   if (!activeSpot) return;
-  const url = activeSpot.gmaps ||
-    `https://www.google.com/maps/search/?api=1&query=${activeSpot.lat},${activeSpot.lon}`;
-  window.open(url, '_blank', 'noopener');
+  window.open(directionsUrl(activeSpot.lat, activeSpot.lon), '_blank', 'noopener');
 }
 
 // ─── RECEIPT PILL ────────────────────────────────────────────
