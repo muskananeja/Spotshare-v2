@@ -1452,7 +1452,6 @@ function openResultsScreen(lat, lon, name) {
   const rmap = ensureResultsMap(lat, lon);
 
   document.getElementById('map-screen').classList.remove('on');
-  document.getElementById('tow-screen').classList.remove('on');
   document.getElementById('results-screen').classList.add('on');
   setTimeout(() => rmap.invalidateSize(), 50);
 
