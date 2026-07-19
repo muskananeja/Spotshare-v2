@@ -130,16 +130,109 @@ body {
 .sri-main { font-size: 14px; font-weight: 600; color: var(--c-ink); }
 .sri-sub  { font-size: 12px; color: var(--c-sub); margin-top: 1px; }
 
-.zone-pill {
-  display: flex; align-items: center; gap: 7px;
-  background: #fff; border-radius: 20px;
-  padding: 7px 12px;
+
+/* ── RESTRICTION CAUTION BANNER ── */
+.restriction-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff5f5; border: 1.5px solid #fecaca;
+  border-radius: 16px;
+  padding: 10px 14px;
   box-shadow: var(--shadow-card);
-  pointer-events: all; align-self: flex-start;
+  pointer-events: all;
+  max-width: 100%;
+  opacity: 0; transform: translateY(-6px);
+  transition: opacity .25s ease, transform .25s ease;
 }
-.zone-pill-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-green); flex-shrink: 0; }
-.zone-pill-name { font-size: 13px; font-weight: 700; color: var(--c-ink); }
-.zone-pill-count { font-size: 13px; color: var(--c-sub); }
+.restriction-banner.on { opacity: 1; transform: translateY(0); }
+.restriction-banner-icon {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  background: var(--c-red); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 900;
+}
+.restriction-banner-text { min-width: 0; }
+.restriction-banner-title { font-size: 13px; font-weight: 800; color: #7f1d1d; }
+.restriction-banner-sub {
+  font-size: 12px; color: #991b1b; margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── RESULTS SCREEN (full-screen search results: map top / list bottom) ── */
+#results-screen { background: #fff; }
+.results-header {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 52px 14px 12px;
+  background: #fff;
+  position: relative; z-index: 20;
+}
+.results-back-btn {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: var(--c-bg); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.results-back-btn svg { width: 20px; height: 20px; stroke: var(--c-ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.results-header .search-bar { flex: 1; }
+.results-header .search-results {
+  position: absolute; top: 100%; left: 64px; right: 14px;
+  margin-top: 6px;
+}
+.results-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.results-map-half { flex: 1; position: relative; min-height: 0; }
+.results-map-half #resultsMap { position: absolute; inset: 0; }
+.results-list-half {
+  flex: 1; min-height: 0; overflow-y: auto;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  margin-top: -16px; position: relative; z-index: 5;
+  box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+  padding-bottom: 20px;
+}
+.results-list-handle { width: 36px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 10px auto 4px; }
+.results-location-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px 12px;
+  border-bottom: 1px solid var(--c-border);
+}
+.results-location-icon {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: var(--c-ink); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+.results-location-name { font-size: 15px; font-weight: 800; color: var(--c-ink); }
+.results-location-sub { font-size: 12px; color: var(--c-sub); margin-top: 1px; }
+.rl-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--c-border);
+  cursor: pointer; transition: background .12s;
+}
+.rl-card:last-child { border: none; }
+.rl-card:active, .rl-card.active { background: var(--c-bg); }
+/* badge matches the real map pin: white fill, colored ring + letter — not a solid color dot */
+.rl-card-badge {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900;
+  border: 2.5px solid currentColor;
+  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+.rl-card-body { flex: 1; min-width: 0; }
+.rl-card-name { font-size: 14px; font-weight: 700; color: var(--c-ink); }
+.rl-card-meta { font-size: 12px; color: var(--c-sub); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rl-card-dist { flex-shrink: 0; text-align: right; }
+.rl-card-dist-num { font-size: 16px; font-weight: 900; color: var(--c-ink); }
+.rl-card-dist-unit { font-size: 11px; color: var(--c-sub); }
+/* neutral (not colored) directions shortcut — colour is reserved for the active/tapped state */
+.rl-card-directions {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  background: var(--c-ink); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.rl-card-directions svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.rl-empty { padding: 40px 24px; text-align: center; color: var(--c-sub); font-size: 14px; }
 
 /* ── MAP EXTRAS ── */
 .map-locate {
@@ -256,6 +349,24 @@ body {
   margin-top: 4px; white-space: nowrap;
   letter-spacing: .04em;
   box-shadow: 0 1px 4px rgba(37,99,235,.4);
+}
+
+/* caution pin for restriction segments (smaller, sits on the road line) */
+.pin-caution {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(220,38,38,.45);
+  border: 3px solid var(--c-red);
+  cursor: pointer;
+  position: relative;
+}
+.pin-caution::after {
+  content: '';
+  position: absolute;
+  width: 24px; height: 3px;
+  background: var(--c-red);
+  transform: rotate(-45deg);
 }
 /* user dot (no circle/tail) */
 .user-dot {
@@ -519,53 +630,6 @@ body {
   transform: translateX(-50%) translateY(-4px);
 }
 
-/* ── Coverage gap full-screen ── */
-.coverage-gap {
-  position: fixed; inset: 0; max-width: 390px; margin: 0 auto;
-  z-index: 200;
-  background: var(--c-bg);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 0; padding: 36px 32px;
-  text-align: center;
-  opacity: 0; pointer-events: none; transition: opacity .3s;
-}
-.coverage-gap.on { opacity: 1; pointer-events: all; }
-.cg-map-emoji { font-size: 64px; margin-bottom: 24px; }
-.cg-live-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: #dcfce7; color: var(--c-green);
-  font-size: 11px; font-weight: 800; letter-spacing: .05em;
-  text-transform: uppercase;
-  padding: 4px 12px; border-radius: 20px;
-  margin-bottom: 16px;
-}
-.cg-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c-green); }
-.cg-title {
-  font-size: 26px; font-weight: 900; color: var(--c-ink);
-  line-height: 1.2; letter-spacing: -.02em;
-  margin-bottom: 10px;
-}
-.cg-sub {
-  font-size: 15px; color: var(--c-sub);
-  line-height: 1.55; margin-bottom: 32px;
-}
-.cg-cta {
-  width: 100%; height: 54px; border-radius: 16px;
-  background: var(--c-ink); color: #fff;
-  border: none; cursor: pointer;
-  font-size: 15px; font-weight: 700; font-family: inherit;
-  letter-spacing: -.01em;
-  transition: opacity .15s;
-}
-.cg-cta:active { opacity: .85; }
-.cg-skip {
-  margin-top: 16px;
-  font-size: 13px; color: var(--c-sub);
-  background: none; border: none; cursor: pointer;
-  font-family: inherit;
-}
-
 /* ── Undo bar ── */
 .undo-bar {
   position: fixed; top: 54px; left: 50%; transform: translateX(-50%);
@@ -593,6 +657,7 @@ body {
 
 .p-sheet {
   position: fixed; bottom: 0; left: 50%; max-width: 390px; width: 100%;
+  max-height: 85vh; overflow-y: auto;
   transform: translate(-50%, 100%);
   background: #fff; border-radius: 24px 24px 0 0;
   z-index: 60;
@@ -653,6 +718,17 @@ body {
 .ps-action:active { opacity: .85; }
 .ps-action.open-btn { background: #dcfce7; color: #15803d; }
 .ps-action.full-btn { background: #fee2e2; color: var(--c-red); }
+
+.ps-directions {
+  width: 100%; height: 50px; border: none; border-radius: 14px;
+  margin-top: 8px;
+  background: var(--c-blue); color: #fff;
+  font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity .15s;
+}
+.ps-directions:active { opacity: .85; }
+.ps-directions svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 </style>
 </head>
 <body>
@@ -671,10 +747,12 @@ body {
       <input class="search-input" id="searchInput" placeholder="Search area or address…" autocomplete="off" spellcheck="false"/>
       <button class="search-clear" id="searchClear" onclick="clearSearch()">×</button>
     </div>
-    <div class="zone-pill">
-      <div class="zone-pill-dot"></div>
-      <span class="zone-pill-name">Bandra West</span>
-      <span class="zone-pill-count" id="zonePillCount">·&thinsp;loading…</span>
+    <div class="restriction-banner" id="restrictionBanner">
+      <div class="restriction-banner-icon">!</div>
+      <div class="restriction-banner-text">
+        <div class="restriction-banner-title">Parking restriction nearby</div>
+        <div class="restriction-banner-sub" id="restrictionBannerSub"></div>
+      </div>
     </div>
   </div>
 
@@ -706,6 +784,39 @@ body {
       <svg viewBox="0 0 24 24"><path d="M3 17h11v2H3zM13 11h4l3 4H3v-2l3-3 3-3 4 4z"/><circle cx="6.5" cy="19.5" r="1.5"/><circle cx="16.5" cy="19.5" r="1.5"/></svg>
       <span class="nt">Tow Radar</span>
     </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SEARCH RESULTS SCREEN (full-screen: map top / list bottom)
+══════════════════════════════════════════ -->
+<div class="screen" id="results-screen">
+  <div class="results-header">
+    <button class="results-back-btn" onclick="closeResultsScreen()">
+      <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="resultsSearchInput" placeholder="Search any address, landmark, or area" autocomplete="off" spellcheck="false"/>
+      <button class="search-clear" id="resultsSearchClear" onclick="clearResultsSearch()">×</button>
+    </div>
+    <div class="search-results" id="resultsSearchResults"></div>
+  </div>
+  <div class="results-body">
+    <div class="results-map-half">
+      <div id="resultsMap"></div>
+    </div>
+    <div class="results-list-half">
+      <div class="results-list-handle"></div>
+      <div class="results-location-header">
+        <div class="results-location-icon">📍</div>
+        <div>
+          <div class="results-location-name" id="resultsLocationName"></div>
+          <div class="results-location-sub" id="resultsLocationSub"></div>
+        </div>
+      </div>
+      <div class="results-list" id="resultsList"></div>
+    </div>
   </div>
 </div>
 
@@ -861,16 +972,6 @@ body {
 <!-- Receipt pill -->
 <div class="receipt-pill" id="receiptPill">Heads up sent to 8 drivers nearby</div>
 
-<!-- Coverage gap screen -->
-<div class="coverage-gap" id="coverageGap">
-  <div class="cg-map-emoji">🗺️</div>
-  <div class="cg-live-badge"><div class="cg-live-dot"></div>Live in Bandra West</div>
-  <div class="cg-title">Be the first to cover <span id="cgArea">your area</span></div>
-  <div class="cg-sub">Curbside is community-powered. Drop a report and you start the map for drivers near you.</div>
-  <button class="cg-cta" onclick="startCovering()">Start covering this area →</button>
-  <button class="cg-skip" onclick="dismissCoverageGap()">Skip, show Bandra West</button>
-</div>
-
 <!-- Undo bar -->
 <div class="undo-bar" id="undoBar">
   <span class="undo-text" id="undoText">Reported: Parking Open</span>
@@ -890,7 +991,7 @@ body {
     <div class="ps-dist-row">
       <div class="ps-dist-num" id="psDist">–</div>
       <div class="ps-dist-detail">
-        <div class="ps-dist-unit">min away</div>
+        <div class="ps-dist-unit">min drive</div>
         <div class="ps-dist-dir" id="psDir"></div>
       </div>
     </div>
@@ -906,6 +1007,10 @@ body {
       <button class="ps-action open-btn" onclick="markSpot('open')">✓ Spot is Open</button>
       <button class="ps-action full-btn" onclick="markSpot('full')">✗ Spot is Full</button>
     </div>
+    <button class="ps-directions" id="psDirections" onclick="openInGoogleMaps()">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      Get Directions
+    </button>
   </div>
 </div>
 
@@ -914,21 +1019,86 @@ body {
 ══════════════════════════════════════════ -->
 <script>
 // ─── SUPABASE CONFIG ─────────────────────────────────────────
-const SUPABASE_URL      = 'https://dojacrbhqzaptbkmhjrv.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_hp060qA1-V254ts7qbvZGA_ZShjmmST';
+const SUPABASE_URL      = 'https://bmlesyzadmsfbrgczwgu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_ty9F6qaVdWQXiwI8qobtOA_uGnw0K2F';
+
+// ─── GOOGLE PLACES CONFIG ────────────────────────────────────
+// Client-side key by design (Maps/Places JS keys are meant to ship in the
+// page). Lock down abuse via Google Cloud Console: API restriction to
+// Places API only, a daily quota cap, and an HTTP referrer restriction
+// once the production domain is final — not by hiding this string.
+const GOOGLE_PLACES_API_KEY = 'AIzaSyDJH016ZQTkktGVZmlJRMdzLLYwxs0AZXk';
 
 // ─── FALLBACK DATA (used if Supabase is unreachable) ─────────
 const FALLBACK_SPOTS = [
-  {id:1,  lat:19.0617,lon:72.8270, cls:'green',  name:'Andheri Multilevel Parking', status:'open',   price:'₹40/hr', hours:'7am – 11pm', pay:'UPI & Cash', type:'Covered lot',    conf:'3 min ago · 4 drivers'},
-  {id:2,  lat:19.0580,lon:72.8268, cls:'green',  name:'Pali Naka Parking',           status:'open',   price:'₹30/hr', hours:'6am – 12am', pay:'Cash',       type:'Open lot',       conf:'12 min ago · 2 drivers'},
-  {id:3,  lat:19.0563,lon:72.8295, cls:'yellow', name:'Linking Rd Parking',          status:'limited',price:'₹60/hr', hours:'8am – 10pm', pay:'UPI only',   type:'Open lot',       conf:'18 min ago · 3 drivers'},
-  {id:4,  lat:19.0601,lon:72.8320, cls:'green',  name:'Mehboob Studios Parking',     status:'open',   price:'₹25/hr', hours:'9am – 9pm',  pay:'Cash',       type:'Covered lot',    conf:'7 min ago · 1 driver'},
-  {id:5,  lat:19.0570,lon:72.8250, cls:'green',  name:'Chapel Road Parking',         status:'open',   price:'₹20/hr', hours:'Open 24h',   pay:'Cash',       type:'Street parking', conf:'31 min ago · 2 drivers'},
-  {id:6,  lat:19.0590,lon:72.8340, cls:'green',  name:'Waterfield Rd Parking',       status:'open',   price:'₹35/hr', hours:'7am – 11pm', pay:'UPI & Cash', type:'Open lot',       conf:'5 min ago · 3 drivers'},
-  {id:7,  lat:19.0548,lon:72.8265, cls:'yellow', name:'Perry Road Side Parking',     status:'limited',price:'₹15/hr', hours:'Open 24h',   pay:'Cash',       type:'Street parking', conf:'22 min ago · 1 driver'},
-  {id:8,  lat:19.0608,lon:72.8285, cls:'green',  name:'16th Road Parking',           status:'open',   price:'₹20/hr', hours:'Open 24h',   pay:'Cash',       type:'Street parking', conf:'9 min ago · 2 drivers'},
-  {id:9,  lat:19.0558,lon:72.8310, cls:'green',  name:'St Andrews Rd Parking',       status:'open',   price:'₹30/hr', hours:'7am – 10pm', pay:'UPI & Cash', type:'Open lot',       conf:'41 min ago · 1 driver'},
-  {id:10, lat:19.0535,lon:72.8290, cls:'yellow', name:'Reclamation Multilevel',      status:'limited',price:'₹50/hr', hours:'6am – 12am', pay:'UPI & Cash', type:'Covered lot',    conf:'2 min ago · 6 drivers'},
+  {id:1, lat:18.9258758,lon:72.820559, cls:'yellow', name:'NCPA Parking', status:'limited', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open during NCPA events', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/hd3iG5A1MFUyMKYt9'},
+  {id:2, lat:18.9510532,lon:72.7965089, cls:'green', name:'BMC Pay & Park, Malabar Hill', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://www.google.com/maps/place/BMC+PAY+AND+PARK/@18.9510532,72.7965089,18z'},
+  {id:3, lat:18.9719595,lon:72.8045352, cls:'green', name:'Breach Candy Hospital Trust Parking', status:'open', price:'Valet parking at nominal price', hours:'Open 24h', pay:'Not specified', type:'Institutional parking', conf:'Corroborated · seed data', gmaps:'https://www.google.com/maps/search/?api=1&query=18.9719595,72.8045352'},
+  {id:4, lat:18.9278621,lon:72.8316532, cls:'green', name:'Kala Ghoda Statue Parking', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/5PVmfbewvEzobhXt5'},
+  {id:5, lat:18.9321194,lon:72.8316188, cls:'green', name:'Paid Parking BMC (Flora Fountain)', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/qbq2TqmtsUvHsUu17'},
+  {id:6, lat:18.9471383,lon:72.8335792, cls:'green', name:'Brihanmumbai Municipal Corporation Paid Parking', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/ZX8gbyLDEKrsi4Pn9'},
+  {id:7, lat:19.0986522,lon:72.8275007, cls:'green', name:'Juhu Beach Parking (Nazir Wadi)', status:'open', price:'Rs.65/hr (car)', hours:'Open 24h', pay:'Card', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/vvteqHAtVR2FDLTD6'},
+  {id:8, lat:19.0560984,lon:72.8529822, cls:'green', name:'MMRDA Parking, BKC (E Block, near Kamgar Bhavan)', status:'open', price:'Rs.60 (first hour)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://www.google.com/maps/search/?api=1&query=19.05609842,72.85298225'},
+  {id:9, lat:18.9325673,lon:72.8283988, cls:'green', name:'Public Parking, Fort (Mantralaya)', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/AA9cAB99jFNYMW7y8'},
+  {id:10, lat:18.9449326,lon:72.8343746, cls:'green', name:'CSTM Pay & Park, Fort', status:'open', price:'Rs.60 (first hour)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/L5TyED3QszkXiSLg6'},
+  {id:11, lat:19.0618317,lon:72.8993605, cls:'green', name:'Pay & Park, Chembur', status:'open', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/sN2SyNWJ1mYqABET8'},
+  {id:12, lat:19.281433,lon:72.8567432, cls:'green', name:'Mira Road Station Pay N Park', status:'open', price:'2W: Rs 20 (12 hrs)', hours:'Open 24h', pay:'Not specified', type:'Bike-only parking', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/3FmwwzUxvMn8vxwf8'},
+  {id:13, lat:18.9956388,lon:72.8234161, cls:'green', name:'Phoenix Mills Parking Lot', status:'open', price:'Rs.75 (first 2 hours)', hours:'Open daily 11:00 AM – 12:00 AM (midnight)', pay:'Not specified', type:'Multilevel parking', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/s24Cyo2c1k8cF11A8'},
+  {id:14, lat:18.9772397,lon:72.8111263, cls:'green', name:'Heera Panna Area Parking', status:'open', price:'Rs.30/hr (2-wheeler)', hours:'10:00 AM – 10:00 PM (shopping centre parking hours)', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://www.google.com/maps/search/?api=1&query=18.97723972,72.81112626'},
+  {id:15, lat:19.0659763,lon:72.869862, cls:'green', name:'Public Car Park Lot near US Consulate', status:'open', price:'Rs.60 (first hour)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/k2Y9PbEFzqnnfWpSA'},
+  {id:16, lat:19.05942,lon:72.862928, cls:'green', name:'MMRDA Parking, BKC (C-32, G Block)', status:'open', price:'Rs.60 (first hour)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/P89HSQXtg4yCuPda9'},
+  {id:17, lat:19.0624389,lon:72.8612165, cls:'green', name:'MMRDA Open Car Park, BKC', status:'open', price:'Rs.60 (first hour)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/A3QnnYotxNnkqw3h9'},
+  {id:18, lat:19.0657602,lon:72.8592259, cls:'green', name:'Pay & Park, BKC (Bharat Nagar Rd)', status:'open', price:'Rs.60 (first hour)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/o3KobVRt12bKnXyK9'},
+  {id:19, lat:18.9399711,lon:72.836263, cls:'green', name:'CSMT Parking', status:'open', price:'Rs.60 (first hour)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/xx2hNNYtw2p2oVkG6'},
+  {id:20, lat:19.1698034,lon:72.9364705, cls:'green', name:'BMC Multilevel Parking', status:'open', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/Fi2CdBnNuoXEwY6a7'},
+  {id:21, lat:19.1963398,lon:72.9784266, cls:'green', name:'Thane Collectorate Parking', status:'open', price:'Free or nominal for government visitors (TMC jurisdiction', hours:'Government office hours: 10:30 AM – 5:30 PM Mon–Sat (Thane…', pay:'Not specified', type:'Institutional parking', conf:'Unverified · seed data', gmaps:'https://www.google.com/maps/search/?api=1&query=19.19633977,72.9784266'},
+  {id:22, lat:18.9786845,lon:72.8345134, cls:'yellow', name:'Byculla Zoo', status:'limited', price:'Rs.80 (car, first 3 hrs) + Rs.30/hr after', hours:'Open Tue–Mon 9:00 AM – 6:00 PM (CLOSED Wednesdays)', pay:'Not specified', type:'Surface lot', conf:'Verified · seed data', gmaps:'https://maps.app.goo.gl/S56BxTbQSpMvoFUi6'},
+  {id:23, lat:19.2105751,lon:72.9740529, cls:'green', name:'Thane municipal parking plaza', status:'open', price:'TMC municipal rates (not publicly published as of 2026)', hours:'Open 24h', pay:'Not specified', type:'Multilevel parking', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/bji5RRV8CMgmD4i79'},
+  {id:24, lat:19.1033165,lon:72.8722305, cls:'green', name:'Brihanmumbai Municipal Corporation Pay & Park', status:'open', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Underground / Basement', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/4ijoeZ1pkP6SkMcX9'},
+  {id:25, lat:19.0323838,lon:72.9238541, cls:'green', name:'DCSEM Garage', status:'open', price:'Rs.65/hr (car)', hours:'Open 24h', pay:'Not specified', type:'Commercial parking', conf:'Corroborated · seed data', gmaps:'https://maps.google.com/maps?q=19.03238375,72.92385411'},
+  {id:26, lat:19.1750988,lon:72.9889285, cls:'green', name:'Newa Bhakti Knowledge City Surface Parking', status:'open', price:'NMMC jurisdiction (Navi Mumbai Municipal Corporation)', hours:'During business/resident hours (Newa Bhakti Knowledge City,…', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.google.com/maps?q=19.17509878,72.98892852'},
+  {id:27, lat:19.1035529,lon:72.8273177, cls:'green', name:'Juhu Beach Parking (Juhu Tara Rd)', status:'open', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/NFLKcQczWx52xChn8'},
+  {id:28, lat:19.0371175,lon:72.8576288, cls:'green', name:'LTMG Sion Hospital Parking', status:'open', price:'Free or nominal (BMC-run government hospital', hours:'Open 24h', pay:'Not specified', type:'Institutional parking', conf:'Corroborated · seed data', gmaps:'https://maps.google.com/maps?q=19.03711751,72.8576288'},
+  {id:29, lat:19.0993233,lon:72.9165669, cls:'green', name:'R City Mall Parking, Ghatkopar', status:'open', price:'Rs 30 per entry (4W)', hours:'11 AM - 9:30 PM Mon-Thu', pay:'Not specified', type:'Multilevel parking', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/5jqsQfzNicVHSsck6'},
+  {id:30, lat:19.0453884,lon:72.9031692, cls:'yellow', name:'Cubic Mall - Chembur', status:'limited', price:'₹50 (first 3 hrs, 4W)', hours:'Opens 10:00 AM (mall hours', pay:'Not specified', type:'Commercial parking', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/b5yacTHA2mVYQqEa6'},
+  {id:31, lat:19.0523719,lon:72.9017203, cls:'yellow', name:'Cinepolis', status:'limited', price:'Rs 60 (cash only per ParkPlus listing', hours:'~10 AM - 11 PM (mall/cinema operating hours', pay:'Cash', type:'Multilevel parking', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/JwrNCq11k761YSeq9'},
+  {id:32, lat:19.0487153,lon:72.8746816, cls:'green', name:'Parking Area', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Weekdays 9 AM - 9 PM', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/WxEqpeVWhNerimbV9'},
+  {id:33, lat:19.0488875,lon:72.8732971, cls:'green', name:'KJ Somaiya Campus Parking', status:'open', price:'Visitors: Rs 20-50/entry (estimated)', hours:'Campus hours: 7 AM - 10 PM (approx.)', pay:'Not specified', type:'Institutional parking', conf:'Unverified · seed data', gmaps:'https://maps.google.com/maps?q=19.04888747,72.87329713'},
+  {id:34, lat:19.2189084,lon:72.9705785, cls:'green', name:'Pay & Park, Thane (Ashar Residency)', status:'open', price:'Not published', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/v7Xw8cEDKkgwj7mGA'},
+  {id:35, lat:19.217196,lon:72.9802398, cls:'green', name:'Bike Park, Thane (Old Agra Rd)', status:'open', price:'Rs 10-20/day (informal two-wheeler parking, Thane rates)', hours:'Approx. 8 AM - 10 PM (informal two-wheeler lot)', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/8dHsBXvbLptT6gVV9'},
+  {id:36, lat:19.0994197,lon:72.867605, cls:'green', name:'Sahar Ayyappa Shiva Parvati Temple Parking Lot and Entrance', status:'open', price:'Free', hours:'Park open Tue–Sun 7:30 AM – 6:30 PM', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/n1T9ZNzDv5LQ39rd6'},
+  {id:37, lat:19.1797279,lon:72.9459599, cls:'yellow', name:'BMC public parking in the basement', status:'limited', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Underground / Basement', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/cdsvNMNZNeCFb5Xy5'},
+  {id:38, lat:19.2319951,lon:72.864038, cls:'green', name:'SGNP Parking Ground', status:'open', price:'Rs 242 per car (vehicle entry fee included with park admission)', hours:'7:30 AM - 6:30 PM (Sanjay Gandhi National Park gate hours)', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/T6HXrRjYjJqaDkTB9'},
+  {id:39, lat:19.1474313,lon:72.855057, cls:'green', name:'NESCO Parking lot', status:'open', price:'Rates vary by event', hours:'Event-based (NESCO operates only during exhibitions/events)', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/vsVX8bPAqwYAZggbA'},
+  {id:40, lat:19.0409913,lon:72.8533583, cls:'green', name:'Asif Ola Parking', status:'open', price:'4W: ₹25 (≤1hr) / ₹30 (1–3hr) / ₹40 (3–6hr) / ₹70 (6–12hr)', hours:'Approx. 7 AM - 10 PM (informal operator-run lot)', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/FUzjqpU4uE5h7bjM7'},
+  {id:41, lat:19.2886181,lon:72.867553, cls:'green', name:'MBMC Parking Lot', status:'open', price:'2W: Rs 20/12hr, Rs 25/24hr (MBMC published rate)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/1VEWrtGRCHysvc3s6'},
+  {id:42, lat:19.2882373,lon:72.8711499, cls:'green', name:'Bhagwan Shri Parshuram Vahansthal', status:'open', price:'Free or nominal donation (religious vahansthal)', hours:'During temple/religious event hours (approx. 6 AM - 9 PM)', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/1VEWrtGRCHysvc3s6'},
+  {id:43, lat:19.2396647,lon:72.8479501, cls:'green', name:'BMC Parking Tower A, Borivali West', status:'open', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Multilevel parking', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/LwRPxeEihB3UrB4w8'},
+  {id:44, lat:19.1596483,lon:72.944394, cls:'green', name:'MCGM Parking, Nahur (Mulund)', status:'open', price:'MCGM standard suburban rates', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/CJP2jSLdPdk376EP9'},
+  {id:45, lat:19.1813205,lon:72.9468132, cls:'green', name:'BMC Parking, Veena Nagar (Mulund West)', status:'open', price:'4W: ₹25 (≤1hr) / ₹30 (1–3hr) / ₹40 (3–6hr) / ₹70 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/F8uuZTA4udu5BpSb9'},
+  {id:46, lat:19.1292179,lon:72.930748, cls:'green', name:'BMC Parking, Kanjurmarg', status:'open', price:'4W: ₹25 (≤1hr) / ₹30 (1–3hr) / ₹40 (3–6hr) / ₹70 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/jkxwWHAVbyH2pTpy9'},
+  {id:47, lat:19.1137544,lon:72.8920901, cls:'green', name:'BMC Parking, Chandivali (Powai)', status:'open', price:'4W: ₹25 (≤1hr) / ₹30 (1–3hr) / ₹40 (3–6hr) / ₹70 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/yNP8RRRQxZZs23a56'},
+  {id:48, lat:19.1301272,lon:72.8230011, cls:'green', name:'BMC Parking, Andheri West', status:'open', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/8TpQ8jz49prDdTq39'},
+  {id:49, lat:19.065537,lon:72.830234, cls:'green', name:'MCGM Pay & Park, Bandra West', status:'open', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'On-street parking', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/WBhwDnfpDYMGaCfB7'},
+  {id:50, lat:19.2270554,lon:72.989353, cls:'green', name:'NaMo Grand Central Park Parking', status:'open', price:'₹40 (4-wheeler)', hours:'6 AM - 9 PM daily (NaMo Grand Central Park operating hours)', pay:'Cash', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/Ab8HgiTyrkzmpDfA9'},
+  {id:51, lat:18.9235725,lon:72.9674645, cls:'green', name:'BUS Parking', status:'open', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Bus / Truck parking', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/6vsMjJu7MwX4pYBH9'},
+  {id:52, lat:18.9252883,lon:72.8322451, cls:'yellow', name:'Paid Parking', status:'limited', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Commercial parking', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/Qd5pnfy26fdcFAke9'},
+  {id:53, lat:19.0756485,lon:72.8997696, cls:'green', name:'Somaiya Parking Ground', status:'open', price:'Visitor parking: approx. Rs 20-50 (estimated)', hours:'Campus hours: 7 AM - 10 PM (approx.)', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/3WTdhtkhtKUpkBzG6'},
+  {id:54, lat:19.005194,lon:72.826722, cls:'green', name:'Utopia City Pay and Park', status:'open', price:'4W: ₹25 (≤1hr) / ₹30 (1–3hr) / ₹40 (3–6hr) / ₹70 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Commercial parking', conf:'Unverified · seed data', gmaps:'https://www.google.com/maps/search/?api=1&query=19.005194,72.826722'},
+  {id:55, lat:19.0037798,lon:72.8301711, cls:'green', name:'MCGM Lodha Parking Pay and Park', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Commercial parking', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/JiH35xscXLsnvRgi8'},
+  {id:56, lat:18.9909632,lon:72.8192918, cls:'green', name:'Nehru Science Centre Parking', status:'open', price:'₹60 (4-wheeler)', hours:'11:30 AM – 8:00 PM (open all days including weekends and pu…', pay:'Not specified', type:'Institutional parking', conf:'Verified · seed data', gmaps:'https://www.google.com/maps/search/?api=1&query=18.990963184887967,72.81929175'},
+  {id:57, lat:19.0641379,lon:72.8417223, cls:'green', name:'Bandra Terminal Parking', status:'open', price:'Free for first 5 min (pick/drop)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Corroborated · seed data', gmaps:'https://maps.app.goo.gl/KUfcGhYMbzhmmRXFA'},
+  {id:58, lat:19.0468292,lon:72.8741312, cls:'green', name:'Parking opp. Somaiya medical college', status:'open', price:'4W: ₹25 (≤1hr) / ₹30 (1–3hr) / ₹40 (3–6hr) / ₹70 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Institutional parking', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/4gGnwNu4ZCMWg7VJ7'},
+  {id:59, lat:19.0938461,lon:72.8560114, cls:'green', name:'Airport Parking', status:'open', price:'T1 private car: ₹150 (8–30 min)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Verified · seed data', gmaps:'https://maps.app.goo.gl/ghXChWRBaNDrsGgC9'},
+  {id:60, lat:19.2850222,lon:72.9397923, cls:'green', name:'Gaimukh Chowpaty Parking (Ghodbunder Rd, Thane)', status:'open', price:'Free (per GMaps user reviews, 2026', hours:'Open daily, closes 8 PM (per GMaps listing \'Gaimukh Chowpaty Parking\')', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://www.google.com/maps/search/?api=1&query=19.28502216,72.93979232'},
+  {id:61, lat:19.0974203,lon:72.8746076, cls:'green', name:'Airport T2 Multilevel Parking (BOM)', status:'open', price:'T2 General (4W private): FREE 0-8min', hours:'Open 24h', pay:'Not specified', type:'Multilevel parking', conf:'Verified · seed data', gmaps:'https://maps.app.goo.gl/CevrwhsAdEBer5ZW6'},
+  {id:62, lat:19.0081849,lon:72.8318573, cls:'green', name:'Kamala Mills Area Parking', status:'open', price:'4W: ₹25 (≤1hr) / ₹30 (1–3hr) / ₹40 (3–6hr) / ₹70 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.google.com/maps?q=19.00818494,72.83185733'},
+  {id:63, lat:19.0079946,lon:72.8287458, cls:'green', name:'Wheelchair-Accessible Parking, Lower Parel', status:'open', price:'Likely free or reduced for disabled badge holders (BMC DCPR-2034 mand…', hours:'Available during daytime commuting hours (accessible/disabled parking…', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/ZF1EWmgnckaRnyKA9'},
+  {id:64, lat:19.2558788,lon:72.9720558, cls:'green', name:'Commercial Parking – Ghodbunder Rd, Thane West', status:'open', price:'Private commercial rates', hours:'Daytime to late evening (private commercial lot)', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.google.com/maps?q=19.25587885,72.97205581'},
+  {id:65, lat:19.1889225,lon:72.9742562, cls:'green', name:'Gavdevi underground parking', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Underground / Basement', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/KhmcFxa8hBCuZbmY9'},
+  {id:66, lat:19.0495497,lon:72.8767233, cls:'green', name:'Pay & Park, Sion (GTB Nagar)', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Approx. 8 AM - 10 PM (private paid parking)', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/1JAN5eFcp2wWCtWm7'},
+  {id:67, lat:18.9162327,lon:72.9781224, cls:'green', name:'GTI Paid Parking', status:'open', price:'Private industrial area parking', hours:'Daytime hours (industrial area lot', pay:'Not specified', type:'Bus / Truck parking', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/7xTVtCToJoJgTuLH7'},
+  {id:68, lat:18.9219372,lon:72.9725899, cls:'green', name:'Jully Pay & Park No. 1', status:'open', price:'4W: ₹15 (≤1hr) / ₹15 (1–3hr) / ₹20 (3–6hr) / ₹35 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Commercial parking', conf:'Unverified · seed data', gmaps:'https://maps.google.com/maps?q=18.921937157744,72.972589856881'},
 ];
 
 // ─── DATA ────────────────────────────────────────────────────
@@ -955,7 +1125,9 @@ function haversine(a, b, c, d) {
   return Math.round(R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x)));
 }
 // urban driving ~20 km/h = 333 m/min; minimum 1 min
-function toMins(metres) { return Math.max(1, Math.ceil(metres / 333)); }
+function driveMins(metres) { return Math.max(1, Math.ceil(metres / 333)); }
+// walking ~80 m/min; minimum 1 min
+function walkMins(metres) { return Math.max(1, Math.ceil(metres / 80)); }
 
 function bearing(a, b, c, d) {
   const dl = (d-b)*Math.PI/180,
@@ -1000,6 +1172,123 @@ function mkTowIcon() {
     iconSize: [40, 44], iconAnchor: [20, 44],
   });
 }
+function mkCautionIcon() {
+  return L.divIcon({
+    className: '',
+    html: `<div class="pin-caution"></div>`,
+    iconSize: [28, 28], iconAnchor: [14, 14],
+  });
+}
+
+// ─── RESTRICTIONS (Mumbai Traffic Police no-parking / odd-even zones) ────
+let restrictions = [];
+let restrictionLayers = [];
+const RESTRICTION_ALERT_METRES = 60;
+
+async function loadRestrictions() {
+  try {
+    const res = await fetch('./data/restrictions.geojson');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const geo = await res.json();
+    restrictions = geo.features || [];
+    renderRestrictions();
+    console.log(`Loaded ${restrictions.length} restriction segments`);
+  } catch (err) {
+    console.warn('Could not load restrictions:', err.message);
+  }
+}
+
+// halfway point along a LineString by cumulative distance (not just array index)
+function lineMidpoint(coords) {
+  const segLens = [];
+  let total = 0;
+  for (let i = 0; i < coords.length - 1; i++) {
+    const d = haversine(coords[i][1], coords[i][0], coords[i+1][1], coords[i+1][0]);
+    segLens.push(d);
+    total += d;
+  }
+  let target = total / 2, acc = 0;
+  for (let i = 0; i < segLens.length; i++) {
+    if (acc + segLens[i] >= target || i === segLens.length - 1) {
+      const t = segLens[i] === 0 ? 0 : (target - acc) / segLens[i];
+      const [lon1, lat1] = coords[i], [lon2, lat2] = coords[i+1];
+      return [lat1 + (lat2-lat1)*t, lon1 + (lon2-lon1)*t];
+    }
+    acc += segLens[i];
+  }
+  const last = coords[coords.length - 1];
+  return [last[1], last[0]];
+}
+
+function renderRestrictions() {
+  restrictionLayers.forEach(l => map.removeLayer(l));
+  restrictionLayers = [];
+
+  restrictions.forEach(f => {
+    const coords = f.geometry.coordinates; // [[lon,lat], ...]
+    const latlngs = coords.map(([lon, lat]) => [lat, lon]);
+    const p = f.properties;
+
+    const line = L.polyline(latlngs, {
+      color: '#dc2626',
+      weight: 4,
+      opacity: 0.65,
+      dashArray: p.permanence === 'temporary' ? '6 6' : null,
+    }).addTo(map);
+    line.bindPopup(`
+      <strong>${p.type}</strong><br>
+      ${p.division} &middot; ${p.permanence}<br>
+      ${p.pdf_url ? `<a href="${p.pdf_url}" target="_blank" rel="noopener">View notification</a>` : 'Notification: ' + p.notification}
+    `);
+    restrictionLayers.push(line);
+
+    if (coords.length >= 2) {
+      const [mlat, mlon] = lineMidpoint(coords);
+      const marker = L.marker([mlat, mlon], { icon: mkCautionIcon() }).addTo(map);
+      marker.on('click', () => line.openPopup());
+      restrictionLayers.push(marker);
+    }
+  });
+
+  checkRestrictionProximity(userLat, userLon);
+}
+
+// shortest distance from a point to a lat/lng segment (equirectangular approx, fine at city scale)
+function pointToSegmentMeters(plat, plon, alat, alon, blat, blon) {
+  const R = 6371000;
+  const latRef = (alat + blat) / 2 * Math.PI / 180;
+  const toXY = (lat, lon) => [(lon * Math.PI/180) * Math.cos(latRef) * R, (lat * Math.PI/180) * R];
+  const [px, py] = toXY(plat, plon);
+  const [ax, ay] = toXY(alat, alon);
+  const [bx, by] = toXY(blat, blon);
+  const dx = bx - ax, dy = by - ay;
+  const lenSq = dx*dx + dy*dy;
+  let t = lenSq === 0 ? 0 : ((px-ax)*dx + (py-ay)*dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  const cx = ax + t*dx, cy = ay + t*dy;
+  return Math.sqrt((px-cx)**2 + (py-cy)**2);
+}
+
+function checkRestrictionProximity(lat, lon) {
+  let nearest = null, nearestDist = Infinity;
+  restrictions.forEach(f => {
+    const coords = f.geometry.coordinates;
+    for (let i = 0; i < coords.length - 1; i++) {
+      const [lon1, lat1] = coords[i], [lon2, lat2] = coords[i+1];
+      const d = pointToSegmentMeters(lat, lon, lat1, lon1, lat2, lon2);
+      if (d < nearestDist) { nearestDist = d; nearest = f; }
+    }
+  });
+
+  const banner = document.getElementById('restrictionBanner');
+  if (nearest && nearestDist <= RESTRICTION_ALERT_METRES) {
+    document.getElementById('restrictionBannerSub').textContent =
+      `${nearest.properties.type} · ${nearest.properties.division}`;
+    banner.classList.add('on');
+  } else {
+    banner.classList.remove('on');
+  }
+}
 
 function renderAll() {
   const vs = visible();
@@ -1041,7 +1330,7 @@ function renderAll() {
         <span class="p-card-badge ${s.status}">${s.status === 'open' ? 'Open' : 'Limited'}</span>
       </div>
       <div>
-        <span class="p-card-dist">${toMins(s.dist)}<span class="unit-min"> min ${s.dir.split(' ')[0]}</span></span>
+        <span class="p-card-dist">${driveMins(s.dist)}<span class="unit-min"> min drive ${s.dir.split(' ')[0]}</span></span>
       </div>
       <div class="p-card-meta">
         ${i === 0 ? '<strong>Nearest · </strong>' : ''}${s.hours} · ${s.price}
@@ -1049,9 +1338,7 @@ function renderAll() {
     </div>
   `).join('');
 
-  // zone pill
-  const openCount = vs.filter(s => s.status === 'open').length;
-  document.getElementById('zonePillCount').textContent = `· ${openCount} open nearby`;
+  checkRestrictionProximity(userLat, userLon);
 }
 
 // ─── GEOLOCATION ─────────────────────────────────────────────
@@ -1062,11 +1349,47 @@ function locateUser() {
     userLon = p.coords.longitude;
     map.setView([userLat, userLon], 16, { animate: true });
     renderAll();
-    checkCoverageGap(userLat, userLon);
   }, () => renderAll(), { enableHighAccuracy: true, timeout: 8000 });
 }
 
 // ─── SEARCH ──────────────────────────────────────────────────
+// Shared Google Places lookup used by both the home search bar
+// (autocomplete only) and the results-screen search bar (re-search).
+async function fetchPlaces(q) {
+  try {
+    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location',
+      },
+      body: JSON.stringify({
+        textQuery: q,
+        locationBias: {
+          circle: { center: { latitude: 19.0760, longitude: 72.8777 }, radius: 50000 },
+        },
+        regionCode: 'IN',
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data.places || [];
+  } catch (e) { return []; }
+}
+function renderPlaceDropdown(places, onPickFnName) {
+  return places.map(p => `
+    <div class="sri" onclick="${onPickFnName}(${p.location.latitude},${p.location.longitude},'${(p.displayName?.text || '').replace(/'/g,"\\'")}')">
+      <div class="sri-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>
+      <div class="sri-text">
+        <div class="sri-main">${p.displayName?.text || ''}</div>
+        <div class="sri-sub">${p.formattedAddress || ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
 let sTimer = null;
 const sInput = document.getElementById('searchInput');
 const sResults = document.getElementById('searchResults');
@@ -1076,35 +1399,15 @@ sInput.addEventListener('input', () => {
   document.getElementById('searchClear').style.display = q ? 'block' : 'none';
   clearTimeout(sTimer);
   if (q.length < 3) { sResults.style.display = 'none'; return; }
-  sTimer = setTimeout(() => doSearch(q), 420);
+  sTimer = setTimeout(async () => {
+    const places = await fetchPlaces(q);
+    sResults.style.display = places.length ? 'block' : 'none';
+    sResults.innerHTML = renderPlaceDropdown(places, 'goTo');
+  }, 420);
 });
 sInput.addEventListener('focus', () => {
   if (sInput.value.trim().length >= 3) sResults.style.display = 'block';
 });
-async function doSearch(q) {
-  try {
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=in`,
-      { headers: { 'Accept-Language': 'en' } }
-    );
-    const data = await r.json();
-    sResults.style.display = data.length ? 'block' : 'none';
-    sResults.innerHTML = data.map(x => `
-      <div class="sri" onclick="goTo(${x.lat},${x.lon},'${x.display_name.split(',')[0].replace(/'/g,"\\'")}')">
-        <div class="sri-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>
-        <div class="sri-text">
-          <div class="sri-main">${x.display_name.split(',')[0]}</div>
-          <div class="sri-sub">${x.display_name.split(',').slice(1,3).join(',').trim()}</div>
-        </div>
-      </div>
-    `).join('');
-  } catch(e) { sResults.style.display = 'none'; }
-}
-function goTo(lat, lon, name) {
-  sInput.value = name;
-  sResults.style.display = 'none';
-  map.setView([+lat, +lon], 16, { animate: true });
-}
 function clearSearch() {
   sInput.value = '';
   document.getElementById('searchClear').style.display = 'none';
@@ -1116,10 +1419,149 @@ document.addEventListener('click', e => {
     sResults.style.display = 'none';
 });
 
+// picking a home-search result opens the full-screen results mode
+function goTo(lat, lon, name) {
+  sResults.style.display = 'none';
+  openResultsScreen(+lat, +lon, name);
+}
+
+// ─── RESULTS SCREEN (full-screen: map top / list bottom) ─────
+let resultsMap = null;
+let resultsMarkers = [];
+let resultsTargetMarker = null;
+
+function ensureResultsMap(lat, lon) {
+  if (resultsMap) return resultsMap;
+  // initialize already centered on the target — no generic-city flash before flying in
+  resultsMap = L.map('resultsMap', { zoomControl: false, attributionControl: false }).setView([lat, lon], 15);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19, subdomains: 'abcd',
+  }).addTo(resultsMap);
+  return resultsMap;
+}
+function mkTargetIcon() {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:34px;height:34px;border-radius:50% 50% 50% 0;background:var(--c-ink);transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35);">
+      <div style="width:12px;height:12px;border-radius:50%;background:#fff;transform:rotate(45deg);"></div>
+    </div>`,
+    iconSize: [34, 34], iconAnchor: [17, 34],
+  });
+}
+
+function openResultsScreen(lat, lon, name) {
+  const isFirstOpen = !resultsMap;
+  const rmap = ensureResultsMap(lat, lon);
+
+  document.getElementById('map-screen').classList.remove('on');
+  document.getElementById('tow-screen').classList.remove('on');
+  document.getElementById('results-screen').classList.add('on');
+  setTimeout(() => rmap.invalidateSize(), 50);
+
+  document.getElementById('resultsSearchInput').value = name;
+  document.getElementById('resultsSearchResults').style.display = 'none';
+
+  if (!isFirstOpen) rmap.setView([lat, lon], 15, { animate: true });
+  if (resultsTargetMarker) rmap.removeLayer(resultsTargetMarker);
+  resultsTargetMarker = L.marker([lat, lon], { icon: mkTargetIcon(), zIndexOffset: 100 }).addTo(rmap);
+
+  const sorted = visible()
+    .map(s => ({ ...s, dist: haversine(lat, lon, s.lat, s.lon) }))
+    .sort((a, b) => a.dist - b.dist);
+
+  document.getElementById('resultsLocationName').textContent = name;
+  document.getElementById('resultsLocationSub').textContent =
+    sorted.length ? `${sorted.length} parking spot${sorted.length === 1 ? '' : 's'} nearby` : 'No parking spots nearby';
+
+  resultsMarkers.forEach(m => rmap.removeLayer(m));
+  resultsMarkers = [];
+
+  const list = document.getElementById('resultsList');
+  if (!sorted.length) {
+    list.innerHTML = `<div class="rl-empty">No parking spots found near this location.</div>`;
+    return;
+  }
+
+  list.innerHTML = sorted.map(s => `
+    <div class="rl-card" id="rlCard-${s.id}" onclick="focusResultCard(${s.id})">
+      <div class="rl-card-badge" style="color:${s.status === 'open' ? 'var(--c-green)' : 'var(--c-yellow)'}">P</div>
+      <div class="rl-card-body">
+        <div class="rl-card-name">${s.name}</div>
+        <div class="rl-card-meta">${s.status === 'open' ? 'Open' : 'Limited'} · ${s.hours} · ${s.price}</div>
+      </div>
+      <div class="rl-card-dist">
+        <div class="rl-card-dist-num">${walkMins(s.dist)}</div>
+        <div class="rl-card-dist-unit">min walk</div>
+      </div>
+      <button class="rl-card-directions" onclick="event.stopPropagation(); window.open('${s.gmaps}', '_blank', 'noopener')">
+        <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
+      </button>
+    </div>
+  `).join('');
+
+  sorted.forEach(s => {
+    const m = L.marker([s.lat, s.lon], { icon: mkPinIcon(s.cls, false, false) }).addTo(rmap);
+    m.on('click', () => focusResultCard(s.id, true));
+    m._spotId = s.id;
+    resultsMarkers.push(m);
+  });
+}
+
+function focusResultCard(id, fromPin) {
+  document.querySelectorAll('.rl-card.active').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById(`rlCard-${id}`);
+  if (card) {
+    card.classList.add('active');
+    if (!fromPin) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  const m = resultsMarkers.find(m => m._spotId === id);
+  if (m && resultsMap) resultsMap.panTo(m.getLatLng(), { animate: true });
+  if (!fromPin) openSpotById(id);
+}
+
+function closeResultsScreen() {
+  document.getElementById('results-screen').classList.remove('on');
+  document.getElementById('map-screen').classList.add('on');
+  setTimeout(() => map.invalidateSize(), 50);
+}
+
+let rsTimer = null;
+const rsInput = document.getElementById('resultsSearchInput');
+const rsResults = document.getElementById('resultsSearchResults');
+rsInput.addEventListener('input', () => {
+  const q = rsInput.value.trim();
+  document.getElementById('resultsSearchClear').style.display = q ? 'block' : 'none';
+  clearTimeout(rsTimer);
+  if (q.length < 3) { rsResults.style.display = 'none'; return; }
+  rsTimer = setTimeout(async () => {
+    const places = await fetchPlaces(q);
+    rsResults.style.display = places.length ? 'block' : 'none';
+    rsResults.innerHTML = renderPlaceDropdown(places, 'goToWithinResults');
+  }, 420);
+});
+rsInput.addEventListener('focus', () => {
+  if (rsInput.value.trim().length >= 3) rsResults.style.display = 'block';
+});
+function goToWithinResults(lat, lon, name) {
+  rsResults.style.display = 'none';
+  openResultsScreen(+lat, +lon, name);
+}
+function clearResultsSearch() {
+  rsInput.value = '';
+  document.getElementById('resultsSearchClear').style.display = 'none';
+  rsResults.style.display = 'none';
+  rsInput.focus();
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#results-screen .search-bar'))
+    rsResults.style.display = 'none';
+});
+
 // ─── TABS ────────────────────────────────────────────────────
 function switchTab(t) {
   document.getElementById('map-screen').classList.toggle('on', t === 'map');
   document.getElementById('tow-screen').classList.toggle('on', t === 'tow');
+  document.getElementById('results-screen').classList.remove('on');
   ['nb-map','nb-map2'].forEach(id => { const e = document.getElementById(id); if(e) e.classList.toggle('on', t==='map'); });
   ['nb-tow','nb-tow2'].forEach(id => { const e = document.getElementById(id); if(e) e.classList.toggle('on', t==='tow'); });
   if (t === 'map') setTimeout(() => map.invalidateSize(), 50);
@@ -1180,7 +1622,7 @@ function openSpot(s) {
   document.getElementById('psPay').textContent   = s.pay;
   document.getElementById('psType').textContent  = s.type;
   document.getElementById('psConf').textContent  = s.conf;
-  document.getElementById('psDist').textContent  = toMins(s.dist);
+  document.getElementById('psDist').textContent  = driveMins(s.dist);
   document.getElementById('psDir').textContent   = s.dir || '';
   document.getElementById('psTags').innerHTML =
     `<span class="ps-tag ${s.status}">${s.status === 'open' ? 'Open' : 'Limited'}</span>` +
@@ -1203,6 +1645,13 @@ function markSpot(action) {
   }
   closeSheet();
   renderAll();
+}
+
+function openInGoogleMaps() {
+  if (!activeSpot) return;
+  const url = activeSpot.gmaps ||
+    `https://www.google.com/maps/search/?api=1&query=${activeSpot.lat},${activeSpot.lon}`;
+  window.open(url, '_blank', 'noopener');
 }
 
 // ─── RECEIPT PILL ────────────────────────────────────────────
@@ -1262,37 +1711,6 @@ function castVote(btn) {
   setTimeout(() => row.classList.remove('on'), 600);
 }
 
-// ─── COVERAGE GAP ────────────────────────────────────────────
-function checkCoverageGap(lat, lon) {
-  const BANDRA = { lat: 19.0596, lon: 72.8295 };
-  function dist(a, b, c, d) {
-    const R = 6371000, dL = (c-a)*Math.PI/180, dN = (d-b)*Math.PI/180;
-    const x = Math.sin(dL/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
-  }
-  if (dist(lat, lon, BANDRA.lat, BANDRA.lon) > 2000) {
-    // reverse geocode to get neighbourhood name
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14`, {
-      headers: { 'Accept-Language': 'en' }
-    }).then(r => r.json()).then(d => {
-      const area = d.address?.suburb || d.address?.neighbourhood || d.address?.city_district || 'your area';
-      document.getElementById('cgArea').textContent = area;
-    }).catch(() => {});
-    document.getElementById('coverageGap').classList.add('on');
-  }
-}
-function startCovering() {
-  document.getElementById('coverageGap').classList.remove('on');
-  // fly map to user location and open report
-  map.setView([userLat, userLon], 16, { animate: true });
-  switchTab('map');
-  setTimeout(() => openReport(), 400);
-}
-function dismissCoverageGap() {
-  document.getElementById('coverageGap').classList.remove('on');
-  map.setView([19.0596, 72.8295], 15.5, { animate: true });
-}
-
 // ─── INIT ────────────────────────────────────────────────────
 async function initApp() {
   try {
@@ -1322,6 +1740,7 @@ async function initApp() {
   });
   renderAll();
   locateUser();
+  loadRestrictions();
 }
 initApp();
 </script>
