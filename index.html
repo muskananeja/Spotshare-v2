@@ -985,10 +985,6 @@ body {
      JAVASCRIPT
 ══════════════════════════════════════════ -->
 <script>
-// ─── SUPABASE CONFIG ─────────────────────────────────────────
-const SUPABASE_URL      = 'https://bmlesyzadmsfbrgczwgu.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_ty9F6qaVdWQXiwI8qobtOA_uGnw0K2F';
-
 // ─── GOOGLE PLACES CONFIG ────────────────────────────────────
 // Client-side key by design (Maps/Places JS keys are meant to ship in the
 // page). Lock down abuse via Google Cloud Console: API restriction to
@@ -996,7 +992,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_ty9F6qaVdWQXiwI8qobtOA_uGnw0K2F';
 // once the production domain is final — not by hiding this string.
 const GOOGLE_PLACES_API_KEY = 'AIzaSyDJH016ZQTkktGVZmlJRMdzLLYwxs0AZXk';
 
-// ─── FALLBACK DATA (used if Supabase is unreachable) ─────────
+// ─── SPOT DATA ───────────────────────────────────────────────
 const FALLBACK_SPOTS = [
   {id:1, lat:18.9258758,lon:72.820559, cls:'yellow', name:'NCPA Parking', status:'limited', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open during NCPA events', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://maps.app.goo.gl/hd3iG5A1MFUyMKYt9'},
   {id:2, lat:18.9510532,lon:72.7965089, cls:'green', name:'BMC Pay & Park, Malabar Hill', status:'open', price:'4W: ₹35 (≤1hr) / ₹45 (1–3hr) / ₹60 (3–6hr) / ₹100 (6–12hr)', hours:'Open 24h', pay:'Not specified', type:'Surface lot', conf:'Unverified · seed data', gmaps:'https://www.google.com/maps/place/BMC+PAY+AND+PARK/@18.9510532,72.7965089,18z'},
@@ -1713,27 +1709,7 @@ function castVote(btn) {
 
 // ─── INIT ────────────────────────────────────────────────────
 async function initApp() {
-  try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/spots?select=*&order=id.asc`,
-      {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        signal: AbortSignal.timeout(5000), // 5-second timeout
-      }
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) throw new Error('Empty response');
-    // derive cls from status (not stored in DB)
-    spots = data.map(s => ({ ...s, cls: s.status === 'open' ? 'green' : 'yellow' }));
-    console.log(`Loaded ${spots.length} spots from Supabase`);
-  } catch (err) {
-    console.warn('Supabase unreachable, using fallback data:', err.message);
-    spots = FALLBACK_SPOTS;
-  }
+  spots = FALLBACK_SPOTS;
   spots.forEach(s => {
     s.dist = haversine(userLat, userLon, s.lat, s.lon);
     s.dir  = bearing(userLat, userLon, s.lat, s.lon);
