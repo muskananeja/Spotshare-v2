@@ -413,7 +413,6 @@ body {
 }
 .pin-wrap.green  .pin-circle { color: var(--c-green); }
 .pin-wrap.yellow .pin-circle { color: var(--c-yellow); }
-.pin-wrap.tow    .pin-circle { color: var(--c-red); background: #fff5f5; }
 .pin-wrap.me     .pin-circle { color: var(--c-blue); background: #eff6ff; border-width: 3px; }
 .pin-wrap.rpt    .pin-circle {
   color: var(--c-blue); background: #eff6ff;
@@ -518,128 +517,6 @@ body {
   width: 24px; height: 24px;
   stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round;
 }
-
-/* ─────────────────────────────────────────
-   TOW RADAR SCREEN
-───────────────────────────────────────── */
-#tow-screen { background: var(--c-bg); overflow: hidden; }
-
-.tow-header {
-  flex-shrink: 0;
-  padding: 52px 20px 22px;
-  transition: background .4s;
-}
-.tow-header.amber  { background: #fef9e7; }
-.tow-header.clear  { background: #f0fdf4; }
-.tow-header.danger { background: #fff5f5; }
-
-.tow-zone-label {
-  font-size: 11px; font-weight: 700; color: rgba(0,0,0,.35);
-  text-transform: uppercase; letter-spacing: .08em;
-  margin-bottom: 10px;
-}
-.tow-status-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 12px; border-radius: 20px;
-  font-size: 12px; font-weight: 800;
-  margin-bottom: 12px;
-}
-.tow-header.amber  .tow-status-badge { background: #fde68a; color: #78350f; }
-.tow-header.clear  .tow-status-badge { background: #bbf7d0; color: #14532d; }
-.tow-header.danger .tow-status-badge { background: #fecaca; color: #7f1d1d; }
-.tow-headline {
-  font-size: 36px; font-weight: 900;
-  line-height: 1.05; letter-spacing: -.025em;
-  margin-bottom: 18px;
-}
-.tow-header.amber  .tow-headline { color: #78350f; }
-.tow-header.clear  .tow-headline { color: #14532d; }
-.tow-header.danger .tow-headline { color: #7f1d1d; }
-.tow-stats {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.tow-stat {
-  background: rgba(255,255,255,.7);
-  border-radius: 12px; padding: 10px 14px;
-}
-.tow-stat-val   { font-size: 22px; font-weight: 900; color: var(--c-ink); line-height: 1; }
-.tow-stat-label { font-size: 10px; font-weight: 700; color: var(--c-sub); text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; }
-
-/* report list */
-.tow-body {
-  flex: 1; overflow-y: auto;
-  background: #fff;
-  border-radius: 24px 24px 0 0;
-  margin-top: -14px;
-  padding-bottom: calc(var(--nav-h) + 16px);
-}
-.tow-body-handle {
-  width: 36px; height: 4px;
-  background: #e5e7eb; border-radius: 2px;
-  margin: 12px auto 16px;
-}
-.tow-section {
-  font-size: 11px; font-weight: 700; color: var(--c-sub);
-  text-transform: uppercase; letter-spacing: .07em;
-  padding: 0 18px 10px;
-}
-
-.r-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 13px 18px;
-  border-bottom: 1px solid var(--c-border);
-  cursor: pointer; transition: background .1s;
-}
-.r-row:last-of-type { border: none; }
-.r-row:active { background: var(--c-bg); }
-.r-row-icon {
-  width: 42px; height: 42px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; flex-shrink: 0;
-}
-.r-row-icon.tow-i  { background: #fee2e2; }
-.r-row-icon.chalk-i{ background: #fef9c3; }
-.r-row-body { flex: 1; min-width: 0; }
-.r-row-title { font-size: 14px; font-weight: 700; color: var(--c-ink); }
-.r-row-sub   { font-size: 12px; color: var(--c-sub); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.r-row-right { flex-shrink: 0; text-align: right; }
-.r-row-time  { font-size: 12px; color: var(--c-sub); }
-.r-row-conf  { font-size: 11px; font-weight: 700; color: var(--c-green); margin-top: 3px; }
-
-.vote-expand {
-  display: none; padding: 0 18px 14px; gap: 8px;
-}
-.vote-expand.on { display: flex; }
-.vbtn {
-  flex: 1; height: 42px; border-radius: 12px;
-  border: 1.5px solid #e5e7eb;
-  background: var(--c-bg);
-  font-size: 13px; font-weight: 700; color: var(--c-ink);
-  cursor: pointer; display: flex; align-items: center;
-  justify-content: center; gap: 6px;
-  transition: all .15s;
-}
-.vbtn.c.on { background: #dcfce7; border-color: #86efac; color: var(--c-green); }
-.vbtn.w.on { background: #fee2e2; border-color: #fca5a5; color: var(--c-red); }
-
-/* safe spots */
-.safe-label {
-  font-size: 11px; font-weight: 700; color: var(--c-sub);
-  text-transform: uppercase; letter-spacing: .07em;
-  padding: 16px 18px 8px;
-}
-.safe-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 11px 18px;
-  border-bottom: 1px solid var(--c-border);
-  cursor: pointer; transition: background .1s;
-}
-.safe-row:last-child { border: none; }
-.safe-row:active { background: var(--c-bg); }
-.safe-row-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-green); flex-shrink: 0; }
-.safe-row-name { font-size: 14px; font-weight: 600; color: var(--c-ink); flex: 1; }
-.safe-row-dist { font-size: 13px; font-weight: 700; color: var(--c-blue); }
 
 /* ─────────────────────────────────────────
    DRIVER REPORT — 4 full-screen quadrants
@@ -1126,13 +1003,6 @@ function mkUserIcon() {
     className: '',
     html: `<div class="user-dot"><div class="user-dot-inner"></div></div>`,
     iconSize: [72, 72], iconAnchor: [36, 36],
-  });
-}
-function mkTowIcon() {
-  return L.divIcon({
-    className: '',
-    html: `<div class="pin-wrap tow"><div class="pin-circle">🚨</div></div>`,
-    iconSize: [40, 44], iconAnchor: [20, 44],
   });
 }
 function mkCautionIcon() {
@@ -1665,45 +1535,6 @@ function showReceiptPill() {
   pill.textContent = `Heads up sent to ${n} drivers nearby`;
   pill.classList.add('on');
   setTimeout(() => pill.classList.remove('on'), 2500);
-}
-
-// ─── TOW VOTES ───────────────────────────────────────────────
-function toggleVote(id) {
-  const el = document.getElementById(id), was = el.classList.contains('on');
-  document.querySelectorAll('.vote-expand').forEach(e => e.classList.remove('on'));
-  if (!was) el.classList.add('on');
-}
-function castVote(btn) {
-  if (btn.classList.contains('on')) return; // already voted
-  const row = btn.closest('.vote-expand');
-  row.querySelectorAll('.vbtn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-
-  // animate confirm count if this is a confirm vote
-  if (btn.classList.contains('c')) {
-    const rRow = row.previousElementSibling;
-    const confEl = rRow.querySelector('.r-row-conf');
-    if (confEl) {
-      const m = confEl.textContent.match(/(\d+)/);
-      if (m) {
-        const cur = parseInt(m[1]);
-        const next = cur + 1;
-        // flash old → new
-        confEl.style.transition = 'none';
-        confEl.style.opacity = '0';
-        confEl.style.transform = 'translateY(4px)';
-        requestAnimationFrame(() => {
-          confEl.textContent = `✓ ${next} confirmed`;
-          requestAnimationFrame(() => {
-            confEl.style.transition = 'opacity .25s ease, transform .25s ease';
-            confEl.style.opacity = '1';
-            confEl.style.transform = 'translateY(0)';
-          });
-        });
-      }
-    }
-  }
-  setTimeout(() => row.classList.remove('on'), 600);
 }
 
 // ─── INIT ────────────────────────────────────────────────────
