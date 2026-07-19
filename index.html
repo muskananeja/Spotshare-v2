@@ -780,10 +780,6 @@ body {
     <button class="bnav-fab" onclick="openReport()">
       <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
-    <button class="bnav-tab" id="nb-tow" onclick="switchTab('tow')">
-      <svg viewBox="0 0 24 24"><path d="M3 17h11v2H3zM13 11h4l3 4H3v-2l3-3 3-3 4 4z"/><circle cx="6.5" cy="19.5" r="1.5"/><circle cx="16.5" cy="19.5" r="1.5"/></svg>
-      <span class="nt">Tow Radar</span>
-    </button>
   </div>
 </div>
 
@@ -817,116 +813,6 @@ body {
       </div>
       <div class="results-list" id="resultsList"></div>
     </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     TOW RADAR SCREEN
-══════════════════════════════════════════ -->
-<div class="screen" id="tow-screen">
-
-  <div class="tow-header amber">
-    <div class="tow-zone-label">Bandra West &middot; Now</div>
-    <div class="tow-status-badge">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      Amber Alert
-    </div>
-    <div class="tow-headline">Reports<br>coming in</div>
-    <div class="tow-stats">
-      <div class="tow-stat">
-        <div class="tow-stat-val">2</div>
-        <div class="tow-stat-label">This hour</div>
-      </div>
-      <div class="tow-stat">
-        <div class="tow-stat-val">14m</div>
-        <div class="tow-stat-label">Last report</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="tow-body">
-    <div class="tow-body-handle"></div>
-    <div class="tow-section">Recent reports</div>
-
-    <div class="r-row" onclick="toggleVote('v1')">
-      <div class="r-row-icon tow-i">🚛</div>
-      <div class="r-row-body">
-        <div class="r-row-title">Tow truck</div>
-        <div class="r-row-sub">Waterfield Rd, near Starbucks</div>
-      </div>
-      <div class="r-row-right">
-        <div class="r-row-time">14m ago</div>
-        <div class="r-row-conf">✓ 4 confirmed</div>
-      </div>
-    </div>
-    <div class="vote-expand" id="v1">
-      <button class="vbtn c" onclick="castVote(this)">👍&nbsp; Confirm</button>
-      <button class="vbtn w" onclick="castVote(this)">❌&nbsp; Wrong</button>
-    </div>
-
-    <div class="r-row" onclick="toggleVote('v2')">
-      <div class="r-row-icon chalk-i">📋</div>
-      <div class="r-row-body">
-        <div class="r-row-title">Challan activity</div>
-        <div class="r-row-sub">Linking Rd, opp. Globus</div>
-      </div>
-      <div class="r-row-right">
-        <div class="r-row-time">42m ago</div>
-        <div class="r-row-conf">✓ 2 confirmed</div>
-      </div>
-    </div>
-    <div class="vote-expand" id="v2">
-      <button class="vbtn c" onclick="castVote(this)">👍&nbsp; Confirm</button>
-      <button class="vbtn w" onclick="castVote(this)">❌&nbsp; Wrong</button>
-    </div>
-
-    <div class="r-row" onclick="toggleVote('v3')">
-      <div class="r-row-icon tow-i">🚛</div>
-      <div class="r-row-body">
-        <div class="r-row-title">BMC van spotted</div>
-        <div class="r-row-sub">Hill Rd, Carter Rd junction</div>
-      </div>
-      <div class="r-row-right">
-        <div class="r-row-time">1h ago</div>
-        <div class="r-row-conf">✓ 5 confirmed</div>
-      </div>
-    </div>
-    <div class="vote-expand" id="v3">
-      <button class="vbtn c" onclick="castVote(this)">👍&nbsp; Confirm</button>
-      <button class="vbtn w" onclick="castVote(this)">❌&nbsp; Wrong</button>
-    </div>
-
-    <div class="safe-label">Safe spots nearby</div>
-
-    <div class="safe-row" onclick="switchTab('map');openSpotById(1)">
-      <div class="safe-row-dot"></div>
-      <div class="safe-row-name">Andheri Multilevel Parking</div>
-      <div class="safe-row-dist">200m →</div>
-    </div>
-    <div class="safe-row" onclick="switchTab('map');openSpotById(2)">
-      <div class="safe-row-dot"></div>
-      <div class="safe-row-name">Pali Naka Parking</div>
-      <div class="safe-row-dist">340m →</div>
-    </div>
-    <div class="safe-row" onclick="switchTab('map');openSpotById(5)">
-      <div class="safe-row-dot"></div>
-      <div class="safe-row-name">Chapel Road Parking</div>
-      <div class="safe-row-dist">480m →</div>
-    </div>
-  </div>
-
-  <div class="bnav">
-    <button class="bnav-tab" id="nb-map2" onclick="switchTab('map')">
-      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-      <span class="nt">Parking</span>
-    </button>
-    <button class="bnav-fab" onclick="openReport()">
-      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </button>
-    <button class="bnav-tab on" id="nb-tow2" onclick="switchTab('tow')">
-      <svg viewBox="0 0 24 24"><path d="M3 17h11v2H3zM13 11h4l3 4H3v-2l3-3 3-3 4 4z"/><circle cx="6.5" cy="19.5" r="1.5"/><circle cx="16.5" cy="19.5" r="1.5"/></svg>
-      <span class="nt">Tow Radar</span>
-    </button>
   </div>
 </div>
 
@@ -1324,12 +1210,6 @@ function renderAll() {
     spotMarkers.push(m);
   });
 
-  // tow pin
-  if (!window._towPin) {
-    window._towPin = L.marker([19.0600, 72.8295], { icon: mkTowIcon() }).addTo(map);
-    window._towPin.on('click', () => switchTab('tow'));
-  }
-
   // user
   if (userMarker) map.removeLayer(userMarker);
   userMarker = L.marker([userLat, userLon], {
@@ -1574,10 +1454,8 @@ document.addEventListener('click', e => {
 // ─── TABS ────────────────────────────────────────────────────
 function switchTab(t) {
   document.getElementById('map-screen').classList.toggle('on', t === 'map');
-  document.getElementById('tow-screen').classList.toggle('on', t === 'tow');
   document.getElementById('results-screen').classList.remove('on');
   ['nb-map','nb-map2'].forEach(id => { const e = document.getElementById(id); if(e) e.classList.toggle('on', t==='map'); });
-  ['nb-tow','nb-tow2'].forEach(id => { const e = document.getElementById(id); if(e) e.classList.toggle('on', t==='tow'); });
   if (t === 'map') setTimeout(() => map.invalidateSize(), 50);
 }
 
