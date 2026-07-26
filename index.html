@@ -378,7 +378,7 @@ body {
 .p-card-badge.open   { background: #dcfce7; color: #15803d; }
 .p-card-badge.limited{ background: #fef9c3; color: #a16207; }
 .p-card-dist {
-  font-size: 28px; font-weight: 900; color: var(--c-ink);
+  font-size: 36px; font-weight: 900; color: var(--c-ink);
   letter-spacing: -.02em; line-height: 1;
 }
 .p-card-dist span { font-size: 13px; font-weight: 600; color: var(--c-sub); margin-left: 2px; }
@@ -1039,9 +1039,14 @@ async function fetchDriveMinutesMap(originLat, originLon, destSpots) {
 
 // fetches real drive times for the given spots and stores them on
 // `realDriveMins`; also patches the sheet's number directly in case it's
-// open on a spot mid-fetch (the caller handles re-sorting/redrawing cards)
-async function refreshDriveMinutes(originLat, originLon, spotsArr) {
+// open on a spot mid-fetch (the caller handles re-sorting/redrawing cards).
+// `expectedGen`, when passed, discards the whole result if a newer
+// renderAll() has started in the meantime — otherwise a slow fetch from
+// a stale (e.g. fallback-location) origin could overwrite spots' real
+// drive times with numbers computed from the wrong starting point.
+async function refreshDriveMinutes(originLat, originLon, spotsArr, expectedGen) {
   const realMins = await fetchDriveMinutesMap(originLat, originLon, spotsArr);
+  if (expectedGen != null && expectedGen !== _renderGen) return;
   realMins.forEach((mins, id) => {
     const s = spotsArr.find(sp => sp.id === id);
     if (s) s.realDriveMins = mins;
@@ -1264,7 +1269,13 @@ function renderSpotsUI(sorted) {
   checkRestrictionProximity(userLat, userLon);
 }
 
+// renderAll() runs once immediately with a fallback location, then again
+// once real GPS resolves — this counter lets a newer call discard an
+// older call's async drive-time results instead of racing to overwrite
+// each other with numbers computed from the wrong origin
+let _renderGen = 0;
 function renderAll() {
+  const myGen = ++_renderGen;
   const vs = visible();
   vs.forEach(s => {
     s.dist = haversine(userLat, userLon, s.lat, s.lon);
@@ -1274,8 +1285,10 @@ function renderAll() {
   renderSpotsUI(sorted);
 
   // once real drive times are in, re-sort and redraw by actual time
-  // instead of straight-line distance
-  refreshDriveMinutes(userLat, userLon, sorted).then(() => {
+  // instead of straight-line distance — but only if no newer renderAll()
+  // call (e.g. locateUser() resolving) has superseded this one
+  refreshDriveMinutes(userLat, userLon, sorted, myGen).then(() => {
+    if (myGen !== _renderGen) return;
     const byDriveTime = [...sorted].sort((a, b) =>
       (a.realDriveMins != null ? a.realDriveMins : driveMins(a.dist)) -
       (b.realDriveMins != null ? b.realDriveMins : driveMins(b.dist))
