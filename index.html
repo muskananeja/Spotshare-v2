@@ -1037,16 +1037,14 @@ async function fetchDriveMinutesMap(originLat, originLon, destSpots) {
   return out;
 }
 
-// fetches real drive times for the given spots, patches their in-memory
-// `realDriveMins` and any already-rendered card/sheet numbers in place —
-// no re-render, so nothing reflows or reshuffles while this resolves
+// fetches real drive times for the given spots and stores them on
+// `realDriveMins`; also patches the sheet's number directly in case it's
+// open on a spot mid-fetch (the caller handles re-sorting/redrawing cards)
 async function refreshDriveMinutes(originLat, originLon, spotsArr) {
   const realMins = await fetchDriveMinutesMap(originLat, originLon, spotsArr);
   realMins.forEach((mins, id) => {
     const s = spotsArr.find(sp => sp.id === id);
     if (s) s.realDriveMins = mins;
-    const el = document.getElementById(`pcd-${id}`);
-    if (el) el.textContent = mins;
     if (activeSpot && activeSpot.id === id) {
       const psEl = document.getElementById('psDist');
       if (psEl) psEl.textContent = mins;
@@ -1222,14 +1220,10 @@ function checkRestrictionProximity(lat, lon) {
   }
 }
 
-function renderAll() {
-  const vs = visible();
-  vs.forEach(s => {
-    s.dist = haversine(userLat, userLon, s.lat, s.lon);
-    s.dir  = bearing(userLat, userLon, s.lat, s.lon);
-  });
-  const sorted = [...vs].sort((a,b) => a.dist - b.dist);
-
+// draws pins + cards for an already-sorted spot list — called twice per
+// location update: once immediately (sorted by straight-line estimate)
+// and again once real drive times come back (sorted by those instead)
+function renderSpotsUI(sorted) {
   spotMarkers.forEach(m => map.removeLayer(m));
   spotMarkers = [];
 
@@ -1249,23 +1243,45 @@ function renderAll() {
   }).addTo(map);
 
   // cards
-  document.getElementById('cardsStrip').innerHTML = sorted.map((s, i) => `
+  document.getElementById('cardsStrip').innerHTML = sorted.map((s, i) => {
+    const mins = s.realDriveMins != null ? s.realDriveMins : driveMins(s.dist);
+    return `
     <div class="p-card" onclick="openSpotById(${s.id})">
       <div class="p-card-top">
         <div class="p-card-name">${s.name}</div>
         <span class="p-card-badge ${s.status}">${s.status === 'open' ? 'Open' : 'Limited'}</span>
       </div>
       <div>
-        <span class="p-card-dist"><span id="pcd-${s.id}">${driveMins(s.dist)}</span><span class="unit-min"> min drive ${s.dir.split(' ')[0]}</span></span>
+        <span class="p-card-dist"><span id="pcd-${s.id}">${mins}</span><span class="unit-min"> min drive ${s.dir.split(' ')[0]}</span></span>
       </div>
       <div class="p-card-meta">
         ${i === 0 ? '<strong>Nearest · </strong>' : ''}${s.hours} · ${s.price}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   checkRestrictionProximity(userLat, userLon);
-  refreshDriveMinutes(userLat, userLon, sorted);
+}
+
+function renderAll() {
+  const vs = visible();
+  vs.forEach(s => {
+    s.dist = haversine(userLat, userLon, s.lat, s.lon);
+    s.dir  = bearing(userLat, userLon, s.lat, s.lon);
+  });
+  const sorted = [...vs].sort((a,b) => a.dist - b.dist);
+  renderSpotsUI(sorted);
+
+  // once real drive times are in, re-sort and redraw by actual time
+  // instead of straight-line distance
+  refreshDriveMinutes(userLat, userLon, sorted).then(() => {
+    const byDriveTime = [...sorted].sort((a, b) =>
+      (a.realDriveMins != null ? a.realDriveMins : driveMins(a.dist)) -
+      (b.realDriveMins != null ? b.realDriveMins : driveMins(b.dist))
+    );
+    renderSpotsUI(byDriveTime);
+  });
 }
 
 // ─── GEOLOCATION ─────────────────────────────────────────────
