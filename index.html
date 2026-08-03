@@ -1334,16 +1334,32 @@ async function fetchPlaces(q) {
     return data.places || [];
   } catch (e) { return []; }
 }
-function renderPlaceDropdown(places, onPickFnName) {
-  return places.map(p => `
-    <div class="sri" onclick="${onPickFnName}(${p.location.latitude},${p.location.longitude},'${(p.displayName?.text || '').replace(/'/g,"\\'")}')">
+// Safely HTML-escapes untrusted text (e.g. Google Places results) before
+// it's interpolated into innerHTML — a malicious business listing name
+// must never be able to inject markup/script.
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+function renderPlaceDropdown(container, places, onPick) {
+  container.innerHTML = '';
+  places.forEach(p => {
+    const name = p.displayName?.text || '';
+    const address = p.formattedAddress || '';
+    const row = document.createElement('div');
+    row.className = 'sri';
+    row.innerHTML = `
       <div class="sri-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>
       <div class="sri-text">
-        <div class="sri-main">${p.displayName?.text || ''}</div>
-        <div class="sri-sub">${p.formattedAddress || ''}</div>
+        <div class="sri-main">${escapeHtml(name)}</div>
+        <div class="sri-sub">${escapeHtml(address)}</div>
       </div>
-    </div>
-  `).join('');
+    `;
+    row.addEventListener('click', () => onPick(p.location.latitude, p.location.longitude, name));
+    container.appendChild(row);
+  });
 }
 
 let sTimer = null;
@@ -1358,7 +1374,7 @@ sInput.addEventListener('input', () => {
   sTimer = setTimeout(async () => {
     const places = await fetchPlaces(q);
     sResults.style.display = places.length ? 'block' : 'none';
-    sResults.innerHTML = renderPlaceDropdown(places, 'goTo');
+    renderPlaceDropdown(sResults, places, goTo);
   }, 420);
 });
 sInput.addEventListener('focus', () => {
@@ -1518,7 +1534,7 @@ rsInput.addEventListener('input', () => {
   rsTimer = setTimeout(async () => {
     const places = await fetchPlaces(q);
     rsResults.style.display = places.length ? 'block' : 'none';
-    rsResults.innerHTML = renderPlaceDropdown(places, 'goToWithinResults');
+    renderPlaceDropdown(rsResults, places, goToWithinResults);
   }, 420);
 });
 rsInput.addEventListener('focus', () => {
