@@ -814,7 +814,7 @@ body {
 </div>
 
 <!-- Receipt pill -->
-<div class="receipt-pill" id="receiptPill">Heads up sent to 8 drivers nearby</div>
+<div class="receipt-pill" id="receiptPill">Reported — thanks for helping other drivers</div>
 
 <!-- Undo bar -->
 <div class="undo-bar" id="undoBar">
@@ -841,7 +841,6 @@ body {
     </div>
 
     <div class="ps-divider"></div>
-    <div class="ps-row"><label>Price</label><span id="psPrice"></span></div>
     <div class="ps-row"><label>Hours</label><span id="psHours"></span></div>
     <div class="ps-row"><label>Payment</label><span id="psPay"></span></div>
     <div class="ps-row"><label>Type</label><span id="psType"></span></div>
@@ -872,6 +871,46 @@ body {
 // silently falls back to the straight-line estimate below.
 const GOOGLE_PLACES_API_KEY = 'AIzaSyDJH016ZQTkktGVZmlJRMdzLLYwxs0AZXk';
 const ROUTE_MATRIX_URL = 'https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix';
+
+// ─── SUPABASE CONFIG ─────────────────────────────────────────
+// Publishable/anon key by design (meant to ship client-side — RLS on
+// the server is what actually enforces what it can do; see
+// scripts/spot-reports-schema.sql for the policies).
+const SUPABASE_URL = 'https://fotjnmkanzjfgtinrfpv.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_4_wlrAbPZavHRQR_stfGYQ_mpv2CiHi';
+
+// anonymous per-browser identity for spot_reports.reporter_id — no
+// auth yet, so this is just a stable local UUID, not a real identity
+function getReporterId() {
+  let id = localStorage.getItem('curbside_reporter_id');
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem('curbside_reporter_id', id);
+  }
+  return id;
+}
+const REPORTER_ID = getReporterId();
+
+// fire-and-forget POST of a status report; failures are logged, not
+// surfaced — the local UI already updated optimistically by the caller
+async function postSpotReport(spotId, status) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/spot_reports`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({ spot_id: spotId, status, reporter_id: REPORTER_ID }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  } catch (e) {
+    console.warn('Failed to persist spot report:', e.message);
+  }
+}
 
 // ─── SPOT DATA ───────────────────────────────────────────────
 const FALLBACK_SPOTS = [
@@ -1260,7 +1299,7 @@ function renderSpotsUI(sorted) {
         <span class="p-card-dist"><span id="pcd-${s.id}">${mins}</span><span class="unit-min"> min drive ${s.dir.split(' ')[0]}</span></span>
       </div>
       <div class="p-card-meta">
-        ${i === 0 ? '<strong>Nearest · </strong>' : ''}${s.hours} · ${s.price}
+        ${i === 0 ? '<strong>Nearest · </strong>' : ''}${s.hours}
       </div>
     </div>
   `;
@@ -1415,7 +1454,7 @@ function goTo(lat, lon, name) {
           <span class="p-card-dist">${walkMins(s.dist)}<span class="unit-min"> min walk ${s.dir.split(' ')[0]}</span></span>
         </div>
         <div class="p-card-meta">
-          ${i === 0 ? '<strong>Nearest · </strong>' : ''}${s.hours} · ${s.price}
+          ${i === 0 ? '<strong>Nearest · </strong>' : ''}${s.hours}
         </div>
       </div>
     `).join('');
@@ -1485,7 +1524,7 @@ function openResultsScreen(lat, lon, name) {
       <div class="rl-card-badge" style="color:${s.status === 'open' ? 'var(--c-green)' : 'var(--c-yellow)'}">P</div>
       <div class="rl-card-body">
         <div class="rl-card-name">${s.name}</div>
-        <div class="rl-card-meta">${s.status === 'open' ? 'Open' : 'Limited'} · ${s.hours} · ${s.price}</div>
+        <div class="rl-card-meta">${s.status === 'open' ? 'Open' : 'Limited'} · ${s.hours}</div>
       </div>
       <div class="rl-card-dist">
         <div class="rl-card-dist-num">${walkMins(s.dist)}</div>
@@ -1584,6 +1623,22 @@ function submitReport(type, emoji, color) {
   map.setView([userLat, userLon], 16, { animate: true });
   setTimeout(() => map.removeLayer(rPin), 90000);
 
+  // "Parking Open"/"Parking Full" persist as a spot_reports row when the
+  // report is near a known spot. "Tow Spotted"/"Tow Cleared" have no
+  // backing schema yet (spot_reports.status only allows open/limited,
+  // and this report isn't tied to any spot_id) — they stay local-only,
+  // same as before this change. See spot-reports-schema.sql scope note.
+  const NEARBY_SPOT_THRESHOLD_M = 100;
+  if (type === 'Parking Open' || type === 'Parking Full') {
+    const status = type === 'Parking Open' ? 'open' : 'limited';
+    let nearest = null, nearestD = Infinity;
+    spots.forEach(s => {
+      const d = haversine(userLat, userLon, s.lat, s.lon);
+      if (d < nearestD) { nearestD = d; nearest = s; }
+    });
+    if (nearest && nearestD <= NEARBY_SPOT_THRESHOLD_M) postSpotReport(nearest.id, status);
+  }
+
   // flash
   const flash = document.getElementById('submitFlash');
   document.getElementById('sfBg').style.background = color;
@@ -1592,7 +1647,6 @@ function submitReport(type, emoji, color) {
   flash.classList.add('on');
   setTimeout(() => {
     flash.classList.remove('on');
-    // receipt pill: "Heads up sent to N drivers nearby"
     showReceiptPill();
     const bar = document.getElementById('undoBar');
     document.getElementById('undoText').textContent = 'Reported: ' + type;
@@ -1613,7 +1667,6 @@ function openSpot(s) {
   if (!s) return;
   activeSpot = s;
   document.getElementById('psName').textContent = s.name;
-  document.getElementById('psPrice').textContent = s.price;
   document.getElementById('psHours').textContent = s.hours;
   document.getElementById('psPay').textContent   = s.pay;
   document.getElementById('psType').textContent  = s.type;
@@ -1634,10 +1687,12 @@ function closeSheet() {
 function markSpot(action) {
   if (!activeSpot) return;
   const s = spots.find(x => x.id === activeSpot.id);
+  const status = action === 'open' ? 'open' : 'limited';
   if (s) {
-    s.status = action === 'open' ? 'open' : 'limited';
-    s.cls    = action === 'open' ? 'green' : 'yellow';
+    s.status = status;
+    s.cls    = status === 'open' ? 'green' : 'yellow';
     s.conf   = 'Just now · you';
+    postSpotReport(s.id, status);
   }
   closeSheet();
   renderAll();
@@ -1655,27 +1710,35 @@ function openInGoogleMaps() {
 }
 
 // ─── RECEIPT PILL ────────────────────────────────────────────
-function nearbyCount() {
-  // higher during peak hours (8–10am, 5–8pm IST)
-  const h = new Date().getHours();
-  const peak = (h >= 8 && h < 10) || (h >= 17 && h < 20);
-  const base = peak ? 9 : 6;
-  // seed by minute so it's stable within a minute but varies across time
-  const seed = new Date().getMinutes();
-  return base + (seed % (peak ? 6 : 5));
-}
 function showReceiptPill() {
   const pill = document.getElementById('receiptPill');
-  const n = nearbyCount();
-  pill.textContent = `Heads up sent to ${n} drivers nearby`;
+  pill.textContent = 'Reported — thanks for helping other drivers';
   pill.classList.add('on');
   setTimeout(() => pill.classList.remove('on'), 2500);
 }
 
 // ─── INIT ────────────────────────────────────────────────────
+async function fetchLiveStatuses() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/spot_current_status?select=spot_id,status`,
+      { headers: { 'apikey': SUPABASE_ANON_KEY }, signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+    return new Map(rows.map(r => [r.spot_id, r.status]));
+  } catch (e) {
+    console.warn('Live status unavailable, using seed status:', e.message);
+    return new Map();
+  }
+}
+
 async function initApp() {
   spots = FALLBACK_SPOTS;
+  const liveStatuses = await fetchLiveStatuses();
   spots.forEach(s => {
+    const live = liveStatuses.get(s.id);
+    if (live) { s.status = live; s.cls = live === 'open' ? 'green' : 'yellow'; }
     s.dist = haversine(userLat, userLon, s.lat, s.lon);
     s.dir  = bearing(userLat, userLon, s.lat, s.lon);
   });
