@@ -1,0 +1,13 @@
+.vercel
+
+# regeneratable data-pipeline output — not read by the app at runtime
+data/mumbai-parking-lots.json
+
+# intermediate scratch artifacts from one-off data-merge sessions
+scripts/master-checklist.json
+scripts/master-valid.json
+scripts/new-entries.json
+scripts/new-entries-strong.json
+scripts/new-spots-to-add.json
+scripts/already-added-nums.json
+scripts/all-added-nums.json
