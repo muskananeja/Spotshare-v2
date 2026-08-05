@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Curbside</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
@@ -637,6 +637,26 @@ body {
 .ps-tag.open   { background: #dcfce7; color: #15803d; }
 .ps-tag.limited{ background: #fef9c3; color: #a16207; }
 
+/* recency badge — the freshness of the most recent crowd report, given
+   the most visually prominent treatment on the sheet (not buried as a
+   metadata row) since it's the single most decision-relevant fact in a
+   crowdsourced-status product */
+.ps-recency {
+  display: none;
+  align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 700;
+  margin-top: 10px; padding: 6px 10px;
+  border-radius: 10px; width: fit-content;
+}
+.ps-recency.on { display: flex; }
+.ps-recency-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ps-recency.fresh { background: #dcfce7; color: #15803d; }
+.ps-recency.fresh .ps-recency-dot { background: #16a34a; }
+.ps-recency.stale { background: #fef9c3; color: #a16207; }
+.ps-recency.stale .ps-recency-dot { background: #d97706; }
+.ps-recency.none  { background: var(--c-bg); color: var(--c-sub); font-weight: 600; }
+.ps-recency.none  .ps-recency-dot { background: #9ca3af; }
+
 /* big distance display */
 .ps-dist-row {
   background: var(--c-bg); border-radius: 16px;
@@ -830,6 +850,7 @@ body {
   <div class="ps-inner">
     <div class="ps-name" id="psName"></div>
     <div class="ps-tags" id="psTags"></div>
+    <div class="ps-recency" id="psRecency"></div>
 
     <div class="ps-dist-row">
       <div class="ps-dist-num" id="psDist">–</div>
@@ -843,7 +864,7 @@ body {
     <div class="ps-row"><label>Hours</label><span id="psHours"></span></div>
     <div class="ps-row"><label>Payment</label><span id="psPay"></span></div>
     <div class="ps-row"><label>Type</label><span id="psType"></span></div>
-    <div class="ps-row" style="border:none"><label style="color:#9ca3af;font-size:13px">Last reported</label><span id="psConf" style="color:#9ca3af;font-size:13px;font-weight:500"></span></div>
+    <div class="ps-row" style="border:none"><label style="color:#9ca3af;font-size:13px">Data source</label><span id="psConf" style="color:#9ca3af;font-size:13px;font-weight:500"></span></div>
 
     <div class="ps-actions">
       <button class="ps-action open-btn" onclick="markSpot('open')">✓ Spot is Open</button>
@@ -1256,7 +1277,7 @@ function checkRestrictionProximity(lat, lon) {
   const banner = document.getElementById('restrictionBanner');
   if (nearest && nearestDist <= RESTRICTION_ALERT_METRES) {
     document.getElementById('restrictionBannerSub').textContent =
-      `${nearest.properties.type} · ${nearest.properties.division}`;
+      `${nearest.properties.type} · ${nearest.properties.division} · ${Math.round(nearestDist)}m away`;
     banner.classList.add('on');
   } else {
     banner.classList.remove('on');
@@ -1662,6 +1683,20 @@ function undoReport() {
 // ─── PARKING SHEET ───────────────────────────────────────────
 let activeSpot = null;
 function openSpotById(id) { openSpot(spots.find(s => s.id === id)); }
+// buckets a spot's most recent crowd report into fresh (<=5min, assert)
+// / stale (<=30min, hedge) / none (no report in the freshness window —
+// spot_current_status already falls back to seed status at that point)
+function recencyInfo(s) {
+  const statusLabel = s.status === 'open' ? 'Open' : 'Limited';
+  if (!s.isLiveReported || !s.lastReportedAt) {
+    return { band: 'none', text: 'No recent reports' };
+  }
+  const ageMin = Math.max(0, Math.round((Date.now() - new Date(s.lastReportedAt).getTime()) / 60000));
+  const ageText = ageMin < 1 ? 'just now' : `${ageMin} min ago`;
+  if (ageMin <= 5) return { band: 'fresh', text: `${statusLabel} · reported ${ageText}` };
+  return { band: 'stale', text: `${statusLabel} · reported ${ageText} — may have changed` };
+}
+
 function openSpot(s) {
   if (!s) return;
   activeSpot = s;
@@ -1675,6 +1710,10 @@ function openSpot(s) {
   document.getElementById('psTags').innerHTML =
     `<span class="ps-tag ${s.status}">${s.status === 'open' ? 'Open' : 'Limited'}</span>` +
     `<span class="ps-tag">${s.type}</span>`;
+  const recency = recencyInfo(s);
+  const recEl = document.getElementById('psRecency');
+  recEl.className = `ps-recency on ${recency.band}`;
+  recEl.innerHTML = `<span class="ps-recency-dot"></span>${recency.text}`;
   document.getElementById('sheetOverlay').classList.add('on');
   document.getElementById('pSheet').classList.add('on');
 }
@@ -1691,6 +1730,8 @@ function markSpot(action) {
     s.status = status;
     s.cls    = status === 'open' ? 'green' : 'yellow';
     s.conf   = 'Just now · you';
+    s.isLiveReported = true;
+    s.lastReportedAt = new Date().toISOString();
     postSpotReport(s.id, status);
   }
   closeSheet();
@@ -1720,12 +1761,12 @@ function showReceiptPill() {
 async function fetchLiveStatuses() {
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/spot_current_status?select=spot_id,status`,
+      `${SUPABASE_URL}/rest/v1/spot_current_status?select=spot_id,status,last_reported_at,is_live_reported`,
       { headers: { 'apikey': SUPABASE_ANON_KEY }, signal: AbortSignal.timeout(5000) }
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const rows = await res.json();
-    return new Map(rows.map(r => [r.spot_id, r.status]));
+    return new Map(rows.map(r => [r.spot_id, r]));
   } catch (e) {
     console.warn('Live status unavailable, using seed status:', e.message);
     return new Map();
@@ -1737,7 +1778,12 @@ async function initApp() {
   const liveStatuses = await fetchLiveStatuses();
   spots.forEach(s => {
     const live = liveStatuses.get(s.id);
-    if (live) { s.status = live; s.cls = live === 'open' ? 'green' : 'yellow'; }
+    if (live) {
+      s.status = live.status;
+      s.cls    = live.status === 'open' ? 'green' : 'yellow';
+      s.isLiveReported = live.is_live_reported;
+      s.lastReportedAt = live.last_reported_at;
+    }
     s.dist = haversine(userLat, userLon, s.lat, s.lon);
     s.dir  = bearing(userLat, userLon, s.lat, s.lon);
   });
