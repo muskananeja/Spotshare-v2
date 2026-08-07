@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Curbside</title>
+<title>SpotShare</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
   crossorigin="anonymous"/>
@@ -586,6 +586,26 @@ body {
   opacity: 1;
   transform: translateX(-50%) translateY(-4px);
 }
+.reject-pill {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 12px);
+  left: 50%; transform: translateX(-50%) translateY(0);
+  z-index: 130;
+  background: #7f1d1d; color: #fff;
+  border-radius: 16px;
+  padding: 12px 18px;
+  font-size: 13px; font-weight: 600;
+  white-space: normal; text-align: center; line-height: 1.4;
+  width: calc(100% - 48px); max-width: 340px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.reject-pill.on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+  pointer-events: auto;
+}
 
 /* ── Undo bar ── */
 .undo-bar {
@@ -797,22 +817,22 @@ body {
      DRIVER REPORT
 ══════════════════════════════════════════ -->
 <div class="dr-screen" id="drScreen">
-  <button class="dr-q po" onclick="submitReport('Parking Open','🅿️','#16a34a')">
+  <button class="dr-q po" onclick="submitReport('Parking Open')">
     <div class="dr-emoji">🅿️</div>
     <div class="dr-label">Parking Open</div>
     <div class="dr-hint">Free spot right now</div>
   </button>
-  <button class="dr-q pf" onclick="submitReport('Parking Full','🚫','#dc2626')">
+  <button class="dr-q pf" onclick="submitReport('Parking Full')">
     <div class="dr-emoji">🚫</div>
     <div class="dr-label">Parking Full</div>
     <div class="dr-hint">No space available</div>
   </button>
-  <button class="dr-q ts" onclick="submitReport('Tow Spotted','🚛','#ea580c')">
+  <button class="dr-q ts" onclick="submitReport('Tow Spotted')">
     <div class="dr-emoji">🚛</div>
     <div class="dr-label">Tow / BMC Van</div>
     <div class="dr-hint">Active tow activity</div>
   </button>
-  <button class="dr-q tc" onclick="submitReport('Tow Cleared','✅','#2563eb')">
+  <button class="dr-q tc" onclick="submitReport('Tow Cleared')">
     <div class="dr-emoji">✅</div>
     <div class="dr-label">Tow Cleared</div>
     <div class="dr-hint">Activity has stopped</div>
@@ -828,7 +848,21 @@ body {
   <div class="sf-body">
     <div class="sf-emoji" id="sfEmoji">🎯</div>
     <div class="sf-title" id="sfTitle">Reported!</div>
-    <div class="sf-sub">Other drivers can see this now</div>
+    <div class="sf-sub" id="sfSub">Other drivers can see this now</div>
+  </div>
+</div>
+
+<!-- Report rejected toast (out of range / failed to persist) -->
+<div class="reject-pill" id="rejectPill"></div>
+
+<!-- Spot picker (fallback when a report can't be auto-matched to a spot) -->
+<div class="sheet-overlay" id="pickerOverlay" onclick="closeSpotPicker()"></div>
+<div class="p-sheet" id="pickerSheet">
+  <div class="ps-handle"></div>
+  <div class="ps-inner">
+    <div class="ps-name">Too far from this spot to report</div>
+    <div style="color:var(--c-sub);font-size:13px;margin-top:4px;">Pick the one you mean:</div>
+    <div id="pickerList" style="margin-top:12px;"></div>
   </div>
 </div>
 
@@ -902,17 +936,19 @@ const SUPABASE_ANON_KEY = 'sb_publishable_4_wlrAbPZavHRQR_stfGYQ_mpv2CiHi';
 // anonymous per-browser identity for spot_reports.reporter_id — no
 // auth yet, so this is just a stable local UUID, not a real identity
 function getReporterId() {
-  let id = localStorage.getItem('curbside_reporter_id');
+  let id = localStorage.getItem('spotshare_reporter_id');
   if (!id) {
     id = crypto.randomUUID();
-    localStorage.setItem('curbside_reporter_id', id);
+    localStorage.setItem('spotshare_reporter_id', id);
   }
   return id;
 }
 const REPORTER_ID = getReporterId();
 
-// fire-and-forget POST of a status report; failures are logged, not
-// surfaced — the local UI already updated optimistically by the caller
+// POSTs a status report and reports back whether it actually persisted.
+// Callers must check this before claiming success to the user — the
+// confirmation copy ("other drivers can see this now") is a promise,
+// and a swallowed failure here used to make that promise silently false.
 async function postSpotReport(spotId, status) {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/spot_reports`, {
@@ -927,8 +963,10 @@ async function postSpotReport(spotId, status) {
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return true;
   } catch (e) {
     console.warn('Failed to persist spot report:', e.message);
+    return false;
   }
 }
 
@@ -1631,39 +1669,36 @@ function closeReport() {
   document.getElementById('drScreen').classList.remove('on');
   document.getElementById('drClose').classList.remove('on');
 }
-function submitReport(type, emoji, color) {
-  closeReport();
-  switchTab('map');
+// "Parking Open"/"Parking Full" persist as a spot_reports row (status
+// maps to the same open/limited vocabulary as spots.status). "Tow
+// Spotted"/"Tow Cleared" have no backing schema yet — status: null
+// marks them as always-local-only, never eligible to claim persistence.
+const REPORT_META = {
+  'Parking Open': { emoji: '🅿️', color: '#16a34a', status: 'open' },
+  'Parking Full': { emoji: '🚫', color: '#dc2626', status: 'limited' },
+  'Tow Spotted':  { emoji: '🚛', color: '#ea580c', status: null },
+  'Tow Cleared':  { emoji: '✅', color: '#2563eb', status: null },
+};
+const NEARBY_SPOT_THRESHOLD_M = 100;
 
-  // drop a highlighted pin at user location
-  const rPin = L.marker([userLat, userLon], {
-    icon: mkPinIcon('green', false, true),
-    zIndexOffset: 200,
-  }).addTo(map);
-  map.setView([userLat, userLon], 16, { animate: true });
-  setTimeout(() => map.removeLayer(rPin), 90000);
+function nearestSpotTo(lat, lon) {
+  let nearest = null, nearestD = Infinity;
+  spots.forEach(s => {
+    const d = haversine(lat, lon, s.lat, s.lon);
+    if (d < nearestD) { nearestD = d; nearest = s; }
+  });
+  return { spot: nearest, dist: nearestD };
+}
 
-  // "Parking Open"/"Parking Full" persist as a spot_reports row when the
-  // report is near a known spot. "Tow Spotted"/"Tow Cleared" have no
-  // backing schema yet (spot_reports.status only allows open/limited,
-  // and this report isn't tied to any spot_id) — they stay local-only,
-  // same as before this change. See spot-reports-schema.sql scope note.
-  const NEARBY_SPOT_THRESHOLD_M = 100;
-  if (type === 'Parking Open' || type === 'Parking Full') {
-    const status = type === 'Parking Open' ? 'open' : 'limited';
-    let nearest = null, nearestD = Infinity;
-    spots.forEach(s => {
-      const d = haversine(userLat, userLon, s.lat, s.lon);
-      if (d < nearestD) { nearestD = d; nearest = s; }
-    });
-    if (nearest && nearestD <= NEARBY_SPOT_THRESHOLD_M) postSpotReport(nearest.id, status);
-  }
-
-  // flash
+// shows the success flash — only ever call this after confirming
+// persistence (or for the local-only tow types, with honest sub-copy)
+function showReportFlash(type, subText) {
+  const meta = REPORT_META[type];
   const flash = document.getElementById('submitFlash');
-  document.getElementById('sfBg').style.background = color;
-  document.getElementById('sfEmoji').textContent = emoji;
+  document.getElementById('sfBg').style.background = meta.color;
+  document.getElementById('sfEmoji').textContent = meta.emoji;
   document.getElementById('sfTitle').textContent = type + ' reported!';
+  document.getElementById('sfSub').textContent = subText;
   flash.classList.add('on');
   setTimeout(() => {
     flash.classList.remove('on');
@@ -1674,10 +1709,90 @@ function submitReport(type, emoji, color) {
     bar._t = setTimeout(() => bar.classList.remove('on'), 4000);
   }, 950);
 }
+
+function showRejectPill(message) {
+  const pill = document.getElementById('rejectPill');
+  pill.textContent = message;
+  pill.classList.add('on');
+  setTimeout(() => pill.classList.remove('on'), 3500);
+}
+
+async function submitReport(type) {
+  closeReport();
+  switchTab('map');
+
+  // drop a highlighted pin at user location — purely visual, independent
+  // of whether the report itself ends up persisted
+  const rPin = L.marker([userLat, userLon], {
+    icon: mkPinIcon('green', false, true),
+    zIndexOffset: 200,
+  }).addTo(map);
+  map.setView([userLat, userLon], 16, { animate: true });
+  setTimeout(() => map.removeLayer(rPin), 90000);
+
+  const meta = REPORT_META[type];
+
+  if (meta.status == null) {
+    // Tow Spotted / Tow Cleared: never persisted, so never claim
+    // "other drivers can see this" — that would be false every time
+    showReportFlash(type, 'Shown on your map only — not sent to other drivers yet');
+    return;
+  }
+
+  const { spot, dist } = nearestSpotTo(userLat, userLon);
+  if (!spot || dist > NEARBY_SPOT_THRESHOLD_M) {
+    showRejectPill('Too far from a known spot to report — pick the right one?');
+    openSpotPicker(type);
+    return;
+  }
+
+  const ok = await postSpotReport(spot.id, meta.status);
+  if (ok) {
+    showReportFlash(type, 'Other drivers can see this now');
+  } else {
+    showRejectPill('Report failed to send — try again in a moment');
+  }
+}
 function undoReport() {
   const bar = document.getElementById('undoBar');
   clearTimeout(bar._t);
   bar.classList.remove('on');
+}
+
+// fallback UI when a report can't be auto-matched to a nearby spot —
+// never drop the report silently, let the user pick which spot they mean
+let pendingReportType = null;
+function openSpotPicker(type) {
+  pendingReportType = type;
+  const nearby = [...spots]
+    .map(s => ({ ...s, _d: haversine(userLat, userLon, s.lat, s.lon) }))
+    .sort((a, b) => a._d - b._d)
+    .slice(0, 8);
+  document.getElementById('pickerList').innerHTML = nearby.map(s => `
+    <div class="rl-card" onclick="pickSpotForReport(${s.id})">
+      <div class="rl-card-badge" style="color:${s.status === 'open' ? 'var(--c-green)' : 'var(--c-yellow)'}">P</div>
+      <div class="rl-card-body">
+        <div class="rl-card-name">${s.name}</div>
+        <div class="rl-card-meta">${Math.round(s._d)}m away</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('pickerOverlay').classList.add('on');
+  document.getElementById('pickerSheet').classList.add('on');
+}
+function closeSpotPicker() {
+  document.getElementById('pickerOverlay').classList.remove('on');
+  document.getElementById('pickerSheet').classList.remove('on');
+  pendingReportType = null;
+}
+async function pickSpotForReport(spotId) {
+  const type = pendingReportType;
+  closeSpotPicker();
+  if (!type) return;
+  const meta = REPORT_META[type];
+  const ok = await postSpotReport(spotId, meta.status);
+  if (ok) showReportFlash(type, 'Other drivers can see this now');
+  else showRejectPill('Report failed to send — try again in a moment');
 }
 
 // ─── PARKING SHEET ───────────────────────────────────────────
