@@ -417,6 +417,11 @@ body {
   color: var(--c-blue); background: #eff6ff;
   animation: pin-pulse 1.2s ease-in-out 4;
 }
+/* selected-pin glow — shown while that spot's detail sheet is open, so
+   it's clear which pin you tapped (or which card's pin you're looking at) */
+.pin-circle { transition: transform .2s ease, box-shadow .2s ease; }
+.pin-wrap.green.active  .pin-circle { transform: scale(1.15); box-shadow: 0 2px 8px rgba(0,0,0,.25), 0 0 0 8px rgba(22,163,74,.25); }
+.pin-wrap.yellow.active .pin-circle { transform: scale(1.15); box-shadow: 0 2px 8px rgba(0,0,0,.25), 0 0 0 8px rgba(217,119,6,.25); }
 @keyframes pin-pulse {
   0%,100% { box-shadow: 0 2px 8px rgba(37,99,235,.3); }
   50%      { box-shadow: 0 2px 20px rgba(37,99,235,.7); }
@@ -909,7 +914,6 @@ body {
     <div class="ps-row"><label>Hours</label><span id="psHours"></span></div>
     <div class="ps-row"><label>Payment</label><span id="psPay"></span></div>
     <div class="ps-row"><label>Type</label><span id="psType"></span></div>
-    <div class="ps-row" style="border:none"><label style="color:#9ca3af;font-size:13px">Data source</label><span id="psConf" style="color:#9ca3af;font-size:13px;font-weight:500"></span></div>
 
     <div class="ps-actions">
       <button class="ps-action open-btn" onclick="markSpot('open')">✓ Spot is Open</button>
@@ -1434,6 +1438,7 @@ function renderSpotsUI(sorted) {
       zIndexOffset: i === 0 ? 100 : 0,
     }).addTo(map);
     m.on('click', () => openSpot(s));
+    m._spotId = s.id;
     spotMarkers.push(m);
   });
 
@@ -1979,14 +1984,35 @@ function recencyInfo(s) {
   return { band: 'stale', text: `${statusLabel} · reported ${ageText} — may have changed` };
 }
 
+// highlights whichever pin (home map or results screen) belongs to the
+// spot currently open in the detail sheet, so it's clear which one you
+// tapped — searches both marker arrays since either screen may be active
+let activePinMarker = null;
+function highlightPin(id) {
+  clearPinHighlight();
+  const m = spotMarkers.find(m => m._spotId === id) || resultsMarkers.find(m => m._spotId === id);
+  if (!m) return;
+  const el = m.getElement();
+  const wrap = el && el.querySelector('.pin-wrap');
+  if (wrap) wrap.classList.add('active');
+  activePinMarker = m;
+}
+function clearPinHighlight() {
+  if (!activePinMarker) return;
+  const el = activePinMarker.getElement();
+  const wrap = el && el.querySelector('.pin-wrap');
+  if (wrap) wrap.classList.remove('active');
+  activePinMarker = null;
+}
+
 function openSpot(s) {
   if (!s) return;
   activeSpot = s;
+  highlightPin(s.id);
   document.getElementById('psName').textContent = s.name;
   document.getElementById('psHours').textContent = s.hours;
   document.getElementById('psPay').textContent   = s.pay;
   document.getElementById('psType').textContent  = s.type;
-  document.getElementById('psConf').textContent  = s.conf;
   document.getElementById('psDist').textContent  = s.realDriveMins != null ? s.realDriveMins : driveMins(s.dist);
   document.getElementById('psDir').textContent   = s.dir || '';
   const tier = tierBadge(s);
@@ -2004,6 +2030,7 @@ function openSpot(s) {
 function closeSheet() {
   document.getElementById('sheetOverlay').classList.remove('on');
   document.getElementById('pSheet').classList.remove('on');
+  clearPinHighlight();
   activeSpot = null;
 }
 function markSpot(action) {
