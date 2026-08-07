@@ -1198,13 +1198,29 @@ function walkMins(metres) { return Math.max(1, Math.ceil(metres / 80)); }
 // Fetches actual traffic-aware driving durations for a batch of spots in
 // one request, keyed by spot id. Batched (not per-spot) to stay within
 // the API's per-request waypoint limit and keep quota usage sane.
+// session-level circuit breaker: a hard ceiling on Google API calls per
+// page load, independent of any server-side quota. Once hit, the app
+// keeps working on cached/estimated data — it does not fail, it just
+// stops spending. Logged, never silent.
+const GOOGLE_CALLS_PER_SESSION_LIMIT = 40;
+let googleCallsThisSession = 0;
+function googleCallAllowed(kind) {
+  if (googleCallsThisSession >= GOOGLE_CALLS_PER_SESSION_LIMIT) {
+    logEvent('google_call_blocked_session_limit', { kind, limit: GOOGLE_CALLS_PER_SESSION_LIMIT });
+    return false;
+  }
+  googleCallsThisSession++;
+  return true;
+}
+
 async function fetchDriveMinutesMap(originLat, originLon, destSpots) {
-  const BATCH = 25;
+  const BATCH = 5; // never request drive times for more than 5 destinations at once
   const out = new Map();
   const batches = [];
   for (let i = 0; i < destSpots.length; i += BATCH) batches.push(destSpots.slice(i, i + BATCH));
 
   await Promise.all(batches.map(async batch => {
+    if (!googleCallAllowed('routes')) return;
     try {
       const res = await fetch(ROUTE_MATRIX_URL, {
         method: 'POST',
@@ -1487,10 +1503,18 @@ function renderAll() {
   const sorted = [...vs].sort((a,b) => a.dist - b.dist);
   renderSpotsUI(sorted);
 
+  // real (paid) drive-time pricing only for the nearest few candidates —
+  // the full list still renders and sorts fine on the distance-based
+  // estimate, so there's no reason to price all 176 spots on every load
+  // when a user only ever looks at the handful near the top. This is the
+  // single largest cost lever in the app: uncapped, one load = 176
+  // billable Routes elements; capped, one load = <=5.
+  const priceable = sorted.slice(0, SEARCH_RESULTS_CAP);
+
   // once real drive times are in, re-sort and redraw by actual time
   // instead of straight-line distance — but only if no newer renderAll()
   // call (e.g. locateUser() resolving) has superseded this one
-  refreshDriveMinutes(userLat, userLon, sorted, myGen).then(() => {
+  refreshDriveMinutes(userLat, userLon, priceable, myGen).then(() => {
     if (myGen !== _renderGen) return;
     const byDriveTime = [...sorted].sort((a, b) =>
       (a.realDriveMins != null ? a.realDriveMins : driveMins(a.dist)) -
@@ -1501,11 +1525,30 @@ function renderAll() {
 }
 
 // ─── GEOLOCATION ─────────────────────────────────────────────
+// debounce + meaningful-movement guard on the one repeatable
+// movement-like trigger in the app (the recenter button) — a mashed
+// button or a GPS fix that hasn't actually moved shouldn't re-price
+// drive times against an origin that's effectively unchanged
+let _lastLocateAt = 0;
+let _lastLocateLat = null, _lastLocateLon = null;
+const LOCATE_DEBOUNCE_MS = 800;
+const LOCATE_MIN_MOVE_M = 100;
+
 function locateUser() {
+  const now = Date.now();
+  if (now - _lastLocateAt < LOCATE_DEBOUNCE_MS) return;
+  _lastLocateAt = now;
   if (!navigator.geolocation) { renderAll(); return; }
   navigator.geolocation.getCurrentPosition(p => {
-    userLat = p.coords.latitude;
-    userLon = p.coords.longitude;
+    const newLat = p.coords.latitude, newLon = p.coords.longitude;
+    if (_lastLocateLat != null && haversine(_lastLocateLat, _lastLocateLon, newLat, newLon) < LOCATE_MIN_MOVE_M) {
+      // hasn't moved meaningfully — update the dot, skip re-pricing
+      userLat = newLat; userLon = newLon;
+      map.setView([userLat, userLon], 16, { animate: true });
+      return;
+    }
+    _lastLocateLat = newLat; _lastLocateLon = newLon;
+    userLat = newLat; userLon = newLon;
     map.setView([userLat, userLon], 16, { animate: true });
     renderAll();
   }, () => renderAll(), { enableHighAccuracy: true, timeout: 8000 });
@@ -1514,7 +1557,14 @@ function locateUser() {
 // ─── SEARCH ──────────────────────────────────────────────────
 // Shared Google Places lookup used by both the home search bar
 // (autocomplete only) and the results-screen search bar (re-search).
+// query -> places[] cache, keyed on the normalized search text. Retyping
+// or re-selecting the same query never re-hits Google within a session.
+const placesQueryCache = new Map();
+
 async function fetchPlaces(q) {
+  const key = q.trim().toLowerCase();
+  if (placesQueryCache.has(key)) return placesQueryCache.get(key);
+  if (!googleCallAllowed('places')) return [];
   try {
     const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',
@@ -1534,7 +1584,9 @@ async function fetchPlaces(q) {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return data.places || [];
+    const places = data.places || [];
+    placesQueryCache.set(key, places);
+    return places;
   } catch (e) { return []; }
 }
 // Safely HTML-escapes untrusted text (e.g. Google Places results) before
@@ -2046,7 +2098,15 @@ function markSpot(action) {
     postSpotReport(s.id, status);
   }
   closeSheet();
-  renderAll();
+  // re-render from already-known distances/drive-times — marking a spot
+  // doesn't move the user, so nothing needs re-pricing from Google;
+  // reusing renderAll() here would burn a fresh Routes call for zero
+  // new information
+  const sorted = [...visible()].sort((a, b) =>
+    (a.realDriveMins != null ? a.realDriveMins : driveMins(a.dist)) -
+    (b.realDriveMins != null ? b.realDriveMins : driveMins(b.dist))
+  );
+  renderSpotsUI(sorted);
 }
 
 // builds a "start navigation" link (not just a place link) —
