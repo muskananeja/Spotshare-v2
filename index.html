@@ -241,6 +241,7 @@ body {
   bottom: calc(var(--nav-h) + 10px);
   left: 0; right: 0;
   display: flex; gap: 10px;
+  align-items: flex-start; /* don't stretch every card to match the tallest neighbor */
   padding: 0 14px;
   overflow-x: auto; overflow-y: visible;
   scroll-snap-type: x mandatory;
