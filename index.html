@@ -50,7 +50,7 @@ body {
   :root { --panel-w: 380px; }
 
   /* map fills the whole viewport; panel sits on top-left */
-  #map, #resultsMap { position: absolute; inset: 0; }
+  #map { position: absolute; inset: 0; }
 
   /* screens are full-viewport, no column stacking */
   .screen { position: absolute; inset: 0; }
@@ -96,34 +96,6 @@ body {
     border-radius: 24px 24px 0 0;
   }
   .p-sheet.on { transform: translateY(0); }
-
-  /* results screen: list panel left, map right */
-  #results-screen { flex-direction: row; }
-  .results-header {
-    position: absolute; top: 0; left: 0; width: var(--panel-w);
-    padding: 20px 14px 12px;
-    background: #fff;
-    border-right: 1px solid #e5e7eb;
-    z-index: 20;
-  }
-  .results-header .search-results {
-    position: absolute; top: 100%; left: 14px; right: 14px; width: auto; margin-top: 4px;
-  }
-  .results-body { flex: 1; display: flex; flex-direction: row; }
-  .results-map-half {
-    position: absolute;
-    top: 0; left: var(--panel-w); right: 0; bottom: 0;
-    flex: none;
-  }
-  .results-list-half {
-    position: absolute;
-    top: 80px; left: 0; width: var(--panel-w); bottom: 0;
-    border-radius: 0; margin-top: 0;
-    border-right: 1px solid #e5e7eb;
-    box-shadow: none;
-    overflow-y: auto;
-  }
-  .results-list-handle { display: none; }
 }
 
 /* ─────────────────────────────────────────
@@ -238,81 +210,6 @@ body {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* ── RESULTS SCREEN (full-screen search results: map top / list bottom) ── */
-#results-screen { background: #fff; }
-.results-header {
-  flex-shrink: 0;
-  display: flex; align-items: center; gap: 10px;
-  padding: 52px 14px 12px;
-  background: #fff;
-  position: relative; z-index: 20;
-}
-.results-back-btn {
-  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-  background: var(--c-bg); border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-}
-.results-back-btn svg { width: 20px; height: 20px; stroke: var(--c-ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.results-header .search-bar { flex: 1; }
-.results-header .search-results {
-  position: absolute; top: 100%; left: 64px; right: 14px;
-  margin-top: 6px;
-}
-.results-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.results-map-half { flex: 1; position: relative; min-height: 0; }
-.results-map-half #resultsMap { position: absolute; inset: 0; }
-.results-list-half {
-  flex: 1; min-height: 0; overflow-y: auto;
-  background: #fff;
-  border-radius: 20px 20px 0 0;
-  margin-top: -16px; position: relative; z-index: 5;
-  box-shadow: 0 -4px 16px rgba(0,0,0,.06);
-  padding-bottom: 20px;
-}
-.results-list-handle { width: 36px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 10px auto 4px; }
-.results-location-header {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 18px 12px;
-  border-bottom: 1px solid var(--c-border);
-}
-.results-location-icon {
-  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
-  background: var(--c-ink); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px;
-}
-.results-location-name { font-size: 15px; font-weight: 800; color: var(--c-ink); }
-.results-location-sub { font-size: 12px; color: var(--c-sub); margin-top: 1px; }
-.rl-card {
-  display: flex; align-items: center; gap: 12px;
-  padding: 13px 18px;
-  border-bottom: 1px solid var(--c-border);
-  cursor: pointer; transition: background .12s;
-}
-.rl-card:last-child { border: none; }
-.rl-card:active, .rl-card.active { background: var(--c-bg); }
-/* badge matches the real map pin: white fill, colored ring + letter — not a solid color dot */
-.rl-card-badge {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
-  background: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 900;
-  border: 2.5px solid currentColor;
-  box-shadow: 0 1px 4px rgba(0,0,0,.15);
-}
-.rl-card-body { flex: 1; min-width: 0; }
-.rl-card-name { font-size: 14px; font-weight: 700; color: var(--c-ink); }
-.rl-card-meta { font-size: 12px; color: var(--c-sub); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rl-card-dist { flex-shrink: 0; text-align: right; }
-.rl-card-dist-num { font-size: 16px; font-weight: 900; color: var(--c-ink); }
-.rl-card-dist-unit { font-size: 11px; color: var(--c-sub); }
-/* neutral (not colored) directions shortcut — colour is reserved for the active/tapped state */
-.rl-card-directions {
-  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-  background: var(--c-ink); border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-}
-.rl-card-directions svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .rl-empty { padding: 40px 24px; text-align: center; color: var(--c-sub); font-size: 14px; }
 
 /* ── MAP EXTRAS ── */
@@ -793,39 +690,6 @@ body {
     <button class="bnav-fab" onclick="openReport()">
       <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SEARCH RESULTS SCREEN (full-screen: map top / list bottom)
-══════════════════════════════════════════ -->
-<div class="screen" id="results-screen">
-  <div class="results-header">
-    <button class="results-back-btn" onclick="closeResultsScreen()">
-      <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    </button>
-    <div class="search-bar">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input class="search-input" id="resultsSearchInput" placeholder="Search any address, landmark, or area" autocomplete="off" spellcheck="false"/>
-      <button class="search-clear" id="resultsSearchClear" onclick="clearResultsSearch()">×</button>
-    </div>
-    <div class="search-results" id="resultsSearchResults"></div>
-  </div>
-  <div class="results-body">
-    <div class="results-map-half">
-      <div id="resultsMap"></div>
-    </div>
-    <div class="results-list-half">
-      <div class="results-list-handle"></div>
-      <div class="results-location-header">
-        <div class="results-location-icon">📍</div>
-        <div>
-          <div class="results-location-name" id="resultsLocationName"></div>
-          <div class="results-location-sub" id="resultsLocationSub"></div>
-        </div>
-      </div>
-      <div class="results-list" id="resultsList"></div>
-    </div>
   </div>
 </div>
 
@@ -1479,7 +1343,7 @@ function renderSpotsUI(sorted) {
         <span class="p-card-dist"><span id="pcd-${s.id}">${mins}</span><span class="unit-min"> min drive ${s.dir.split(' ')[0]}</span></span>
       </div>
       <div class="p-card-meta">
-        ${i === 0 ? '<strong>Nearest · </strong>' : ''}${s.hours}
+        ${i === 0 ? '<strong>Nearest · </strong>' : ''}${cardMetaLine(s)}
       </div>
     </div>
   `;
@@ -1555,8 +1419,6 @@ function locateUser() {
 }
 
 // ─── SEARCH ──────────────────────────────────────────────────
-// Shared Google Places lookup used by both the home search bar
-// (autocomplete only) and the results-screen search bar (re-search).
 // query -> places[] cache, keyed on the normalized search text. Retyping
 // or re-selecting the same query never re-hits Google within a session.
 const placesQueryCache = new Map();
@@ -1682,9 +1544,10 @@ async function patchSearchDriveTimes(lat, lon, candidates, onUpdate) {
   realMins.forEach((mins, id) => onUpdate(id, mins));
 }
 
-// desktop search results: walk-filtered, capped at 5, drive-time priced
-// only for the survivors (1 Route Matrix batch, not 176 spots' worth)
-function renderDesktopSearchCards(lat, lon, name) {
+// search results: walk-filtered, capped at 5, drive-time priced only for
+// the survivors (1 Route Matrix batch, not 176 spots' worth) — same card
+// strip as the home screen, on both mobile and desktop
+function renderSearchCards(lat, lon, name) {
   const candidates = nearbySearchCandidates(lat, lon, name);
   const container = document.getElementById('cardsStrip');
   if (!candidates.length) {
@@ -1704,7 +1567,7 @@ function renderDesktopSearchCards(lat, lon, name) {
       <div>
         <span class="p-card-dist"><span id="src-pcd-${s.id}">${driveMins(s._walkDist)}</span><span class="unit-min"> min drive ${dir(s)}</span></span>
       </div>
-      <div class="p-card-meta">${s.hours}</div>
+      <div class="p-card-meta">${cardMetaLine(s)}</div>
     </div>`;
   };
   container.innerHTML = candidates.map(cardHtml).join('');
@@ -1714,36 +1577,19 @@ function renderDesktopSearchCards(lat, lon, name) {
   });
 }
 
+// searching always pans the main map and shows the results as cards in
+// the same strip the home screen uses — mobile used to get a separate
+// full-screen map+list results screen; that's gone, everyone gets cards
 function goTo(lat, lon, name) {
   sResults.style.display = 'none';
   sInput.value = name;
   lat = +lat; lon = +lon;
-  if (window.innerWidth >= 768) {
-    // desktop: pan main map, drop a pin, show the 5 nearest walkable
-    // candidates from the searched point
-    map.setView([lat, lon], 15, { animate: true });
-    if (_searchPin) map.removeLayer(_searchPin);
-    _searchPin = L.marker([lat, lon], { icon: mkTargetIcon(), zIndexOffset: 100 }).addTo(map);
-    renderDesktopSearchCards(lat, lon, name);
-  } else {
-    openResultsScreen(lat, lon, name);
-  }
+  map.setView([lat, lon], 15, { animate: true });
+  if (_searchPin) map.removeLayer(_searchPin);
+  _searchPin = L.marker([lat, lon], { icon: mkTargetIcon(), zIndexOffset: 100 }).addTo(map);
+  renderSearchCards(lat, lon, name);
 }
 
-// ─── RESULTS SCREEN (full-screen: map top / list bottom) ─────
-let resultsMap = null;
-let resultsMarkers = [];
-let resultsTargetMarker = null;
-
-function ensureResultsMap(lat, lon) {
-  if (resultsMap) return resultsMap;
-  // initialize already centered on the target — no generic-city flash before flying in
-  resultsMap = L.map('resultsMap', { zoomControl: false, attributionControl: false }).setView([lat, lon], 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19, subdomains: 'abcd',
-  }).addTo(resultsMap);
-  return resultsMap;
-}
 function mkTargetIcon() {
   return L.divIcon({
     className: '',
@@ -1754,123 +1600,9 @@ function mkTargetIcon() {
   });
 }
 
-function openResultsScreen(lat, lon, name) {
-  const isFirstOpen = !resultsMap;
-  const rmap = ensureResultsMap(lat, lon);
-
-  document.getElementById('map-screen').classList.remove('on');
-  document.getElementById('results-screen').classList.add('on');
-  setTimeout(() => rmap.invalidateSize(), 50);
-
-  document.getElementById('resultsSearchInput').value = name;
-  document.getElementById('resultsSearchResults').style.display = 'none';
-
-  if (!isFirstOpen) rmap.setView([lat, lon], 15, { animate: true });
-  if (resultsTargetMarker) rmap.removeLayer(resultsTargetMarker);
-  resultsTargetMarker = L.marker([lat, lon], { icon: mkTargetIcon(), zIndexOffset: 100 }).addTo(rmap);
-
-  const candidates = nearbySearchCandidates(lat, lon, name);
-
-  document.getElementById('resultsLocationName').textContent = name;
-  document.getElementById('resultsLocationSub').textContent = candidates.length
-    ? `${candidates.length} spot${candidates.length === 1 ? '' : 's'} within a 15-min walk`
-    : 'Nothing within a 15-min walk';
-
-  resultsMarkers.forEach(m => rmap.removeLayer(m));
-  resultsMarkers = [];
-
-  const list = document.getElementById('resultsList');
-  if (!candidates.length) {
-    list.innerHTML = `<div class="rl-empty">No parking within a 15-min walk of this location.</div>`;
-    return;
-  }
-
-  list.innerHTML = candidates.map(s => {
-    const tier = tierBadge(s);
-    return `
-    <div class="rl-card" id="rlCard-${s.id}" onclick="focusResultCard(${s.id})">
-      <div class="rl-card-badge" style="color:${s.status === 'open' ? 'var(--c-green)' : 'var(--c-yellow)'}">P</div>
-      <div class="rl-card-body">
-        <div class="rl-card-name">${s.name}${tier ? ` <span class="p-card-tier ${tier.cls}">${tier.label}</span>` : ''}</div>
-        <div class="rl-card-meta">${s.status === 'open' ? 'Open' : 'Limited'} · ${s.hours}</div>
-      </div>
-      <div class="rl-card-dist">
-        <div class="rl-card-dist-num" id="src-rl-${s.id}">${driveMins(s._walkDist)}</div>
-        <div class="rl-card-dist-unit">min drive</div>
-      </div>
-      <button class="rl-card-directions" onclick="event.stopPropagation(); window.open(directionsUrl(${s.lat},${s.lon}), '_blank', 'noopener')">
-        <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
-      </button>
-    </div>`;
-  }).join('');
-
-  candidates.forEach(s => {
-    const m = L.marker([s.lat, s.lon], { icon: mkPinIcon(s.cls, false, false) }).addTo(rmap);
-    m.on('click', () => focusResultCard(s.id, true));
-    m._spotId = s.id;
-    resultsMarkers.push(m);
-  });
-
-  patchSearchDriveTimes(lat, lon, candidates, (id, mins) => {
-    const el = document.getElementById(`src-rl-${id}`);
-    if (el) el.textContent = mins;
-  });
-}
-
-function focusResultCard(id, fromPin) {
-  document.querySelectorAll('.rl-card.active').forEach(c => c.classList.remove('active'));
-  const card = document.getElementById(`rlCard-${id}`);
-  if (card) {
-    card.classList.add('active');
-    if (!fromPin) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-  const m = resultsMarkers.find(m => m._spotId === id);
-  if (m && resultsMap) resultsMap.panTo(m.getLatLng(), { animate: true });
-  if (!fromPin) openSpotById(id);
-}
-
-function closeResultsScreen() {
-  document.getElementById('results-screen').classList.remove('on');
-  document.getElementById('map-screen').classList.add('on');
-  setTimeout(() => map.invalidateSize(), 50);
-}
-
-let rsTimer = null;
-const rsInput = document.getElementById('resultsSearchInput');
-const rsResults = document.getElementById('resultsSearchResults');
-rsInput.addEventListener('input', () => {
-  const q = rsInput.value.trim();
-  document.getElementById('resultsSearchClear').style.display = q ? 'block' : 'none';
-  clearTimeout(rsTimer);
-  if (q.length < 3) { rsResults.style.display = 'none'; return; }
-  rsTimer = setTimeout(async () => {
-    const places = await fetchPlaces(q);
-    rsResults.style.display = places.length ? 'block' : 'none';
-    renderPlaceDropdown(rsResults, places, goToWithinResults);
-  }, 420);
-});
-rsInput.addEventListener('focus', () => {
-  if (rsInput.value.trim().length >= 3) rsResults.style.display = 'block';
-});
-function goToWithinResults(lat, lon, name) {
-  rsResults.style.display = 'none';
-  openResultsScreen(+lat, +lon, name);
-}
-function clearResultsSearch() {
-  rsInput.value = '';
-  document.getElementById('resultsSearchClear').style.display = 'none';
-  rsResults.style.display = 'none';
-  rsInput.focus();
-}
-document.addEventListener('click', e => {
-  if (!e.target.closest('#results-screen .search-bar'))
-    rsResults.style.display = 'none';
-});
-
 // ─── TABS ────────────────────────────────────────────────────
 function switchTab(t) {
   document.getElementById('map-screen').classList.toggle('on', t === 'map');
-  document.getElementById('results-screen').classList.remove('on');
   ['nb-map','nb-map2'].forEach(id => { const e = document.getElementById(id); if(e) e.classList.toggle('on', t==='map'); });
   if (t === 'map') setTimeout(() => map.invalidateSize(), 50);
 }
@@ -2019,6 +1751,14 @@ function tierBadge(s) {
   return null;
 }
 
+// card meta line — always leads with category (type), since a lot of
+// spots don't have hours data; showing only "Not specified" left cards
+// looking empty. Category is the one thing we always know.
+function cardMetaLine(s) {
+  const hasHours = s.hours && s.hours !== 'Not specified';
+  return hasHours ? `${s.type} · ${s.hours}` : s.type;
+}
+
 // ─── PARKING SHEET ───────────────────────────────────────────
 let activeSpot = null;
 function openSpotById(id) { openSpot(spots.find(s => s.id === id)); }
@@ -2036,13 +1776,12 @@ function recencyInfo(s) {
   return { band: 'stale', text: `${statusLabel} · reported ${ageText} — may have changed` };
 }
 
-// highlights whichever pin (home map or results screen) belongs to the
-// spot currently open in the detail sheet, so it's clear which one you
-// tapped — searches both marker arrays since either screen may be active
+// highlights whichever pin belongs to the spot currently open in the
+// detail sheet, so it's clear which one you tapped
 let activePinMarker = null;
 function highlightPin(id) {
   clearPinHighlight();
-  const m = spotMarkers.find(m => m._spotId === id) || resultsMarkers.find(m => m._spotId === id);
+  const m = spotMarkers.find(m => m._spotId === id);
   if (!m) return;
   const el = m.getElement();
   const wrap = el && el.querySelector('.pin-wrap');
